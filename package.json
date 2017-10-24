@@ -1,7 +1,6 @@
 {
   "scripts": {
-    "start-local": "webpack-dev-server --env.local --progress --hot --port 3030 --open",
-    "start": "webpack-dev-server --progress --hot --port 3030 --open"
+    "start": "http-server -p 3030"
   },
   "dependencies": {
     "d3-request": "^1.0.5",
@@ -17,7 +16,7 @@
   },
   "devDependencies": {
     "buble-loader": "^0.4.0",
-    "webpack": "^3.8.1",
-    "webpack-dev-server": "^2.2.0"
+    "http-server": "^0.10.0",
+    "webpack": "^3.8.1"
   }
 }

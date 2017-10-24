@@ -65,43 +65,49 @@ export default class DeckGLOverlay extends Component {
     const sources = [];
     const pairs = {};
 
-    data.forEach((county, i) => {
+    const oData = {};
+    data.forEach(feature => {
+       oData[feature.properties.name] = feature; 
+    });
+    
+    Object.keys(oData).forEach((name) => {
 
-      const {flows, centroid: targetCentroid} = county.properties;
+      const {flows, centroid: targetCentroid} = oData[name].properties;
       const value = {gain: 0, loss: 0};
 
-      Object.keys(flows).forEach(toId => {
-        value[flows[toId] > 0 ? 'gain' : 'loss'] += flows[toId];
+      Object.keys(flows).filter(toId => oData.hasOwnProperty(toId))
+        .forEach(toId => {
+            value[flows[toId] > 0 ? 'gain' : 'loss'] += flows[toId];
 
-        // if number too small, ignore it
-        //if (Math.abs(flows[toId]) == 0) {
-        //  return;
-        //}
-        const pairKey = [i, Number(toId)].sort((a, b) => a - b).join('-');
-        const sourceCentroid = data[toId].properties.centroid;
-        const gain = Math.sign(flows[toId]);
+            // if number too small, ignore it
+            //if (Math.abs(flows[toId]) == 0) {
+            //  return;
+            //}
+            const pairKey = [name, Number(toId)].sort((a, b) => a - b).join('-');
+            const sourceCentroid = oData[toId].properties.centroid;
+            const gain = Math.sign(flows[toId]);
 
-        // add point at arc source
-        sources.push({
-          position: sourceCentroid,
-          target: targetCentroid,
-          name: data[toId].properties.name,
-          radius: 3,
-          gain: -gain
-        });
+            // add point at arc source
+            sources.push({
+              position: sourceCentroid,
+              target: targetCentroid,
+              name: oData[toId].properties.name,
+              radius: 3,
+              gain: -gain
+            });
 
-        // eliminate duplicates arcs
-        if (pairs[pairKey]) {
-          return;
-        }
+            // eliminate duplicates arcs
+            if (pairs[pairKey]) {
+              return;
+            }
 
-        pairs[pairKey] = true;
+            pairs[pairKey] = true;
 
-        arcs.push({
-          target: gain > 0 ? targetCentroid : sourceCentroid,
-          source: gain > 0 ? sourceCentroid : targetCentroid,
-          value: flows[toId]
-        });
+            arcs.push({
+              target: gain > 0 ? targetCentroid : sourceCentroid,
+              source: gain > 0 ? sourceCentroid : targetCentroid,
+              value: flows[toId]
+            });
       });
 
       // add point at arc target
@@ -109,7 +115,7 @@ export default class DeckGLOverlay extends Component {
         ...value,
         position: [targetCentroid[0], targetCentroid[1], 10],
         net: value.gain + value.loss,
-        name: county.properties.name
+        name: oData[name].properties.name
       });
     });
 
