@@ -45,10 +45,12 @@ export default class DataFilter {
       .forEach(col => {
         this.filters[col] = this.data.dimension(d => d[col]);
       });
+    return this;
   }
   
   filter(dim, filterText) {
     this.filters[dim].filterAll();
     this.filters[dim].filter(d => d.startsWith(filterText));
+    return this;
   }
 }
