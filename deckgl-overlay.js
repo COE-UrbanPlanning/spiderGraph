@@ -57,6 +57,7 @@ export default class DeckGLOverlay extends Component {
   }
 
   _getLayerData({data}) {
+    return null;
     if (!data) {
       return null;
     }

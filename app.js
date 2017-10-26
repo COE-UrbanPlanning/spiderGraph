@@ -2,6 +2,9 @@
 import React, {Component} from 'react';
 import {render} from 'react-dom';
 import MapGL from 'react-map-gl';
+import {queue} from 'd3-queue';
+import {json as requestJSON} from 'd3-request';
+
 import DeckGLOverlay from './deckgl-overlay.js';
 import DataFilter from './filter.js';
 
@@ -21,33 +24,33 @@ const tooltipStyle = {
 
 // Source data locations
 const DATA_URL = 'trips_agg.csv';
-const CENTROIDS_URL = 'coords.json';
+const COORDS_URL = 'coords.json';
 
 class Root extends Component {
 
   constructor(props) {
     super(props);
+    
+    this.filter = props.filter; 
+    
     this.state = {
       viewport: {
         ...DeckGLOverlay.defaultViewport,
-        width: 500,
-        height: 500
+        width: window.innerWidth,
+        height: window.innerHeight - 100
       },
       data: null,
+      coords: props.coords,
       mousePosition: [0, 0]
     };
-    
-    this.filter = new DataFilter();
-    window.filter = this.filter;
-    
-    this.filter.loadData(DATA_URL, CENTROIDS_URL, () => {
-      console.log('data loaded');
-      this.draw();
-    });
   }
 
   componentDidMount() {
     window.addEventListener('resize', this._resize.bind(this));
+    var nameInput = document.getElementById('name_input');
+    name_input.addEventListener('input', (function(e) {
+      this.filterMap('IncGrp', e.target.value);
+    }).bind(this));
     this._resize();
   }
 
@@ -97,12 +100,8 @@ class Root extends Component {
     );
   }
   render() {
-    const {viewport, data, mousePosition, mouseEntered} = this.state;
-
-    if (!data) {
-      return null;
-    }
-
+    const {viewport, data, coords, mousePosition, mouseEntered} = this.state;
+    
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
            onMouseEnter={this._onMouseEnter.bind(this)}
@@ -113,7 +112,8 @@ class Root extends Component {
           onViewportChange={this._onViewportChange.bind(this)}
           mapboxApiAccessToken={MAPBOX_TOKEN}>
           <DeckGLOverlay viewport={viewport}
-            data={data}
+            data={data ? data : []}
+            coords={coords}
             brushRadius={1000}
             opacity={0.7}
             strokeWidth={0.5}
@@ -129,16 +129,8 @@ class Root extends Component {
   
   filterMap(dim, filterText) {
     this.filter.filter(dim, filterText);
-    this.setState({
-      data: null
-    });
-    //polygons.clearLayers();
     var shapes = []
     this.draw();
-    //filter.filters['name'].top(Infinity).forEach(function(feature) {
-    //  var shape = feature.geometry.coordinates[0].map(coords => coords.slice().reverse());
-    //  polygons.addLayer(L.polygon(shape, {color: 'blue', weight: 1}));
-    //});
   }
 
   draw() {
@@ -148,10 +140,16 @@ class Root extends Component {
   }
 }
 
-render(<Root />, document.body.appendChild(document.createElement('div')));
+var filter = new DataFilter();
+window.filter = filter;
 
-//filter.loadJSON('output.json').then(function() {
-//    var nameInput = document.getElementById('name_input');
-//    Root.filterMap('');
-//    nameInput.oninput = function(e) { Root.filterMap(e.target.value); };
-//});
+queue()
+  .defer(filter.loadData.bind(filter), DATA_URL)
+  .defer(requestJSON, COORDS_URL)
+  .await((error, data, coords) => {
+    console.log('data loaded');
+    
+    render(<Root filter={filter}
+             coords={coords}/>,
+           document.body.appendChild(document.createElement('div')));
+  });

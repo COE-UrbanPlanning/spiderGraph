@@ -1,6 +1,5 @@
 import crossfilter from 'crossfilter2';
-import {json as requestJSON, csv as requestCSV} from 'd3-request';
-import {queue} from 'd3-queue';
+import {csv as requestCSV} from 'd3-request';
 
 export default class DataFilter {
   constructor() {
@@ -23,19 +22,15 @@ export default class DataFilter {
     return this._data.allFiltered();
   }
   
-  loadData(data_file, coords_file, callback) {
-    queue()
-      .defer(requestCSV, data_file)
-      .defer(requestJSON, coords_file)
-      .await((error, data, coords) => {
-        if (!error) {
-          this._raw_data = data;
-          this._data = crossfilter(data);
-          this._coords = coords;
-          this.buildFilters();
-          if (callback) { callback(this); }
-        }
-      });
+  loadData(data_file, callback) {
+    requestCSV(data_file, (error, data) => {
+      if (!error) {
+        this._raw_data = data;
+        this._data = crossfilter(data);
+        this.buildFilters();
+      }
+      if (callback) { callback(error, this); }
+    });
   }
   
   buildFilters() {
