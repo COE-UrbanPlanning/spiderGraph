@@ -189,7 +189,7 @@ export default class DeckGLOverlay extends Component {
       new ArcBrushingLayer({
         id: 'arc',
         data: arcs,
-        strokeWidth,
+        strokeWidth: strokeWidth,
         opacity,
         brushRadius,
         enableBrushing: startBrushing,

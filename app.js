@@ -157,7 +157,7 @@ class Root extends Component {
 
 }
 
-render(<Root />, document.body.appendChild(document.createElement('div')));
+render(<Root />, document.getElementById("map"));
 
 //filter.loadJSON('output.json').then(function() {
 //    var nameInput = document.getElementById('name_input');
