@@ -29,7 +29,7 @@ const defaultProps = {
   // show point only if source is in brush
   brushTarget: false,
   // brush radius in meters
-  brushRadius: 100000,
+  brushRadius: 300000,
   mousePosition: [0, 0],
   getTargetPosition: d => d.target
 };

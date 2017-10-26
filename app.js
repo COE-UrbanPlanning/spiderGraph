@@ -5,8 +5,6 @@ import MapGL from 'react-map-gl';
 import DeckGLOverlay from './deckgl-overlay.js';
 import DataFilter from './filter.js';
 
-import {json as requestJson} from 'd3-request';
-
 // Set your mapbox token here
 //const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZGVyc2h1IiwiYSI6ImNqOG5lc2tqMTFhOGoycW11cjBmaGdtZzYifQ.3p27c852PbAWhiFaJNHrsQ';
@@ -21,11 +19,9 @@ const tooltipStyle = {
   pointerEvents: 'none'
 };
 
-// Source data GeoJSON
-//const DATA_URL = 'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/arc/counties.json'; // eslint-disable-line
-const DATA_URL = 'output.json';
-
-var filter = window.filter = new DataFilter();
+// Source data locations
+const DATA_URL = 'trips_agg.csv';
+const CENTROIDS_URL = 'coords.json';
 
 class Root extends Component {
 
@@ -40,22 +36,14 @@ class Root extends Component {
       data: null,
       mousePosition: [0, 0]
     };
-
-    requestJson(DATA_URL, (error, response) => {
-      if (!error) {
-        this.setState({
-          data: response.features
-        });
-      }
+    
+    this.filter = new DataFilter();
+    window.filter = this.filter;
+    
+    this.filter.loadData(DATA_URL, CENTROIDS_URL, () => {
+      console.log('data loaded');
+      this.draw();
     });
-        
-        
-    filter.loadJSON('output.json').then(() => {
-      var nameInput = document.getElementById('name_input');
-      this.filterMap('');
-      nameInput.oninput = e => { this.filterMap(e.target.value); };
-    });
-
   }
 
   componentDidMount() {
@@ -126,7 +114,7 @@ class Root extends Component {
           mapboxApiAccessToken={MAPBOX_TOKEN}>
           <DeckGLOverlay viewport={viewport}
             data={data}
-            brushRadius={500}
+            brushRadius={1000}
             opacity={0.7}
             strokeWidth={0.5}
             enableBrushing={true}
@@ -138,23 +126,26 @@ class Root extends Component {
       </div>
     );
   }
-
-  filterMap(filterText) {
-    filter.filter('name', filterText);
+  
+  filterMap(dim, filterText) {
+    this.filter.filter(dim, filterText);
     this.setState({
       data: null
     });
     //polygons.clearLayers();
     var shapes = []
-    this.setState({
-      data: filter.filters['name'].top(Infinity)
-    });
+    this.draw();
     //filter.filters['name'].top(Infinity).forEach(function(feature) {
     //  var shape = feature.geometry.coordinates[0].map(coords => coords.slice().reverse());
     //  polygons.addLayer(L.polygon(shape, {color: 'blue', weight: 1}));
     //});
   }
 
+  draw() {
+    this.setState({
+      data: this.filter.result
+    });
+  }
 }
 
 render(<Root />, document.getElementById("map"));
