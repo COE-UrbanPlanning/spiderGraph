@@ -1,6 +1,4 @@
 node_modules/
-*.csv
-*.json
-!package.json
+output.json
 bundle.js
 bundle.js.map
