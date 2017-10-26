@@ -56,7 +56,9 @@ export default class DeckGLOverlay extends Component {
     }
   }
 
-  _getLayerData({data}) {
+  _getLayerData(props) {
+    var data = props.data;
+    
     return null;
     if (!data) {
       return null;

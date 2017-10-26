@@ -43,6 +43,12 @@ export default class DataFilter {
     return this;
   }
   
+  reset() {
+    Object.keys(this.filters).forEach(filter => {
+      this.filters[filter].filterAll();
+    });
+  }
+  
   filter(dim, filterText) {
     this.filters[dim].filterAll();
     this.filters[dim].filter(d => d.startsWith(filterText));
