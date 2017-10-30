@@ -1,4 +1,4 @@
-import crossfilter from 'crossfilter';
+import crossfilter from 'crossfilter2';
 //import L from 'leaflet';
 
 //const MAPBOX_TOKEN = 'pk.eyJ1IjoiZGVyc2h1IiwiYSI6ImNqOG5lc2tqMTFhOGoycW11cjBmaGdtZzYifQ.3p27c852PbAWhiFaJNHrsQ';
