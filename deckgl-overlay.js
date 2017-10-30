@@ -57,81 +57,119 @@ export default class DeckGLOverlay extends Component {
   }
 
   _getLayerData(props) {
-    var data = props.data;
+    const data = props.data;
+    const coords = props.coords;
     
-    return null;
     if (!data) {
       return null;
     }
+    
+    const pairs = {};
+    const targetDict = {};
     const arcs = [];
     const targets = [];
     const sources = [];
-    const pairs = {};
-
-    const oData = {};
-    data.forEach(feature => {
-       oData[feature.properties.name] = feature; 
+    const not_found = [];
+    
+    data.forEach((trip, i) => {
+      const source = trip['I'];
+      const target = trip['J'];
+      
+      var error = false;
+      if (!coords.hasOwnProperty(source)) {
+        not_found.push(source);
+        error = true;
+      }
+      if (!coords.hasOwnProperty(target)) {
+        not_found.push(target);
+        error = true;
+      }
+      if (error) {
+        return;
+      }
+      
+      const key = [source, target].sort((a, b) => Number(a) - Number(b));
+      let gain = 0;
+      let loss = 0;
+      // detect reverse trip
+      if (key[0] === source) {
+        gain = 1;
+      } else {
+        loss = -1;
+      }
+      
+      let pair = pairs[[source, target]];
+      if (!pairs[[source, target]]) {
+        pairs[[source, target]] = {
+          name: source,
+          position: coords[source].centroid,
+          target: target,
+          gain: gain,
+          loss: loss
+        };
+      } else {
+        pairs[[source, target]].gain += gain;
+        pairs[[source, target]].loss += loss;
+      }
+      
+      // needs gain, loss, net, radius
+      if (!targetDict[target]) {
+        targetDict[target] = {
+          name: target,
+          position: coords[target].centroid,
+          gain: 0,
+          loss: 0,
+          net: 0
+        };
+      }
     });
     
-    Object.keys(oData).forEach((name) => {
-
-      const {flows, centroid: targetCentroid} = oData[name].properties;
-      const value = {gain: 0, loss: 0};
-
-      Object.keys(flows).filter(toId => oData.hasOwnProperty(toId))
-        .forEach(toId => {
-            value[flows[toId] > 0 ? 'gain' : 'loss'] += flows[toId];
-
-            // if number too small, ignore it
-            //if (Math.abs(flows[toId]) == 0) {
-            //  return;
-            //}
-            const pairKey = [name, Number(toId)].sort((a, b) => a - b).join('-');
-            const sourceCentroid = oData[toId].properties.centroid;
-            const gain = Math.sign(flows[toId]);
-
-            // add point at arc source
-            sources.push({
-              position: sourceCentroid,
-              target: targetCentroid,
-              name: oData[toId].properties.name,
-              radius: 3,
-              gain: -gain
-            });
-
-            // eliminate duplicates arcs
-            if (pairs[pairKey]) {
-              return;
-            }
-
-            pairs[pairKey] = true;
-
-            arcs.push({
-              target: gain > 0 ? targetCentroid : sourceCentroid,
-              source: gain > 0 ? sourceCentroid : targetCentroid,
-              value: flows[toId]
-            });
+    Object.keys(pairs).forEach(pairKey => {
+      const {name, position, target, gain, loss} = pairs[pairKey];
+      const gainSign = Math.sign(gain);
+      const net = gain + loss;
+      
+      targetDict[target].gain += gain;
+      targetDict[target].loss += loss;
+      targetDict[target].net += net;
+      
+      sources.push({
+        name: name,
+        gain: -gainSign,
+        position: position,
+        target: coords[target].centroid,
+        radius: 0
       });
-
-      // add point at arc target
-      targets.push({
-        ...value,
-        position: [targetCentroid[0], targetCentroid[1], 10],
-        net: value.gain + value.loss,
-        name: oData[name].properties.name
+      
+      arcs.push({
+        points: [name, target],
+        source: position,
+        target: coords[target].centroid,
+        value: net
       });
     });
-
+    
+    Object.keys(targetDict).forEach(target => {
+      targets.push(targetDict[target]);
+    });
+    
     // sort targets by radius large -> small
     targets.sort((a, b) => Math.abs(b.net) - Math.abs(a.net));
-    const sizeScale = scaleLinear()
+    if (targets.length > 0) {
+      const sizeScale = scaleLinear()
       .domain([0, Math.abs(targets[0].net)])
       .range([0.0036, 0.04]);
 
-    targets.forEach(pt => {
-      pt.radius = Math.sqrt(sizeScale(Math.abs(pt.net)));
-    });
-
+      targets.forEach(pt => {
+        pt.radius = Math.sqrt(sizeScale(Math.abs(pt.net)));
+      });
+    }
+    
+    if (not_found) {
+      console.warn('The following TAZs were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
+    }
+    
+    console.log({arcs, targets, sources});
     return {arcs, targets, sources};
   }
 
