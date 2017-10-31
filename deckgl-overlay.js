@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {scaleLinear} from 'd3-scale';
 
-import DeckGL from 'deck.gl';
+import DeckGL, {GeoJsonLayer} from 'deck.gl';
 import ArcBrushingLayer from './arc-brushing-layer';
 import ScatterplotBrushingLayer from './scatterplot-brushing-layer';
 
