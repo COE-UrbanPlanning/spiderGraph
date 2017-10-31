@@ -4,16 +4,14 @@
   },
   "dependencies": {
     "crossfilter2": "^1.4.3",
-    "d3-queue": "^3.0.7",
     "d3-request": "^1.0.5",
     "d3-scale": "^1.0.5",
     "deck.gl": "^4.1.0",
-    "leaflet": "^1.2.0",
     "luma.gl": "^4.0.1",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
     "react-map-gl": "^3.0.0",
-    "set-default-browser": "^1.0.1"
+    "set-default-browser": "^1.0.1",
   },
   "devDependencies": {
     "buble-loader": "^0.4.0",

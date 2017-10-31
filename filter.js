@@ -13,10 +13,6 @@ export default class DataFilter {
   get raw_data() {
     return this._raw_data;
   }
-    
-  get coords() {
-    return this._coords;
-  }
   
   get result() {
     return this._data.allFiltered();

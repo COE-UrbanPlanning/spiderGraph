@@ -8,6 +8,8 @@ import {json as requestJSON} from 'd3-request';
 import DeckGLOverlay from './deckgl-overlay.js';
 import DataFilter from './filter.js';
 
+import {json as requestJson} from 'd3-request';
+
 // Set your mapbox token here
 //const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZGVyc2h1IiwiYSI6ImNqOG5lc2tqMTFhOGoycW11cjBmaGdtZzYifQ.3p27c852PbAWhiFaJNHrsQ';
@@ -157,5 +159,5 @@ queue()
     
     render(<Root filter={filter}
              coords={coords}/>,
-           document.body.appendChild(document.createElement('div')));
+           document.getElementById("map"));
   });
