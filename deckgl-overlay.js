@@ -78,12 +78,16 @@ export default class DeckGLOverlay extends Component {
       
       var error = false;
       if (!coords.hasOwnProperty(source)) {
-        not_found.push(source);
         error = true;
+        if (!not_found.includes(source)) {
+          not_found.push(source);
+        }
       }
       if (!coords.hasOwnProperty(target)) {
-        not_found.push(target);
         error = true;
+        if (!not_found.includes(target)) {
+          not_found.push(target);
+        }
       }
       if (error) {
         return;
@@ -171,7 +175,7 @@ export default class DeckGLOverlay extends Component {
       });
     }
     
-    if (not_found) {
+    if (not_found.length > 0) {
       console.warn('The following TAZs were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
     }
     
