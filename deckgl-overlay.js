@@ -74,7 +74,7 @@ export default class DeckGLOverlay extends Component {
     function processData(trip) {
       const source = trip['I'];
       const target = trip['J'];
-      const count = trip['count'];
+      const count = Number(trip['count']);
       
       var error = false;
       if (!coords.hasOwnProperty(source)) {

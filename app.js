@@ -24,7 +24,7 @@ const tooltipStyle = {
 
 // Source data locations
 const DATA_URL = 'trips_district.csv';
-const COORDS_URL = 'coords.json';
+const COORDS_URL = 'coords_district.json';
 
 class Root extends Component {
 
@@ -132,9 +132,9 @@ class Root extends Component {
           <DeckGLOverlay viewport={viewport}
             data={data ? data : []}
             coords={coords}
-            brushRadius={1000}
-            opacity={0.7}
-            strokeWidth={0.5}
+            brushRadius={2500}
+            opacity={0.3}
+            strokeWidth={2}
             enableBrushing={true}
             mousePosition={mousePosition}
             mouseEntered={mouseEntered}
