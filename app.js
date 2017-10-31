@@ -23,7 +23,7 @@ const tooltipStyle = {
 };
 
 // Source data locations
-const DATA_URL = 'trips_agg.csv';
+const DATA_URL = 'trips_district.csv';
 const COORDS_URL = 'coords.json';
 
 class Root extends Component {

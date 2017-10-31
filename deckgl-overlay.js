@@ -71,9 +71,10 @@ export default class DeckGLOverlay extends Component {
     const sources = [];
     const not_found = [];
     
-    data.forEach((trip, i) => {
+    function processData(trip) {
       const source = trip['I'];
       const target = trip['J'];
+      const count = trip['count'];
       
       var error = false;
       if (!coords.hasOwnProperty(source)) {
@@ -93,9 +94,9 @@ export default class DeckGLOverlay extends Component {
       let loss = 0;
       // detect reverse trip
       if (key[0] === source) {
-        gain = 1;
+        gain = count;
       } else {
-        loss = -1;
+        loss = -count;
       }
       
       let pair = pairs[[source, target]];
@@ -122,7 +123,12 @@ export default class DeckGLOverlay extends Component {
           net: 0
         };
       }
-    });
+    }
+    
+    // data.forEach(processData);
+    for (var i = 0; i < data.length; i++) {
+      processData(data[i]);
+    }
     
     Object.keys(pairs).forEach(pairKey => {
       const {name, position, target, gain, loss} = pairs[pairKey];
