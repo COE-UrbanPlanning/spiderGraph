@@ -129,7 +129,7 @@ void main(void) {
   vec4 next = project_to_clipspace(vec4(nextPos, 1.0));
    
   // mix strokeWidth with brush, if not in brush, return 0
-  float finalWidth = (0.0, strokeScale * instanceStrokeWidth, isInBrush);
+  float finalWidth = mix(0.0, strokeScale * instanceStrokeWidth, isInBrush);
   
   // extrude
   vec2 offset = getExtrusionOffset((next.xy - curr.xy) * indexDir, positions.y, finalWidth);

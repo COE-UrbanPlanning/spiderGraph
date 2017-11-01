@@ -241,7 +241,6 @@ export default class DeckGLOverlay extends Component {
         id: 'arc',
         data: arcs,
         strokeScale: strokeScale,
-        strokeWidth: 5,
         opacity,
         brushRadius,
         enableBrushing: startBrushing,
@@ -249,8 +248,7 @@ export default class DeckGLOverlay extends Component {
         getSourcePosition: d => d.source,
         getTargetPosition: d => d.target,
         getSourceColor: d => sourceColor,
-        getTargetColor: d => targetColor,
-        getStrokeWidth: d => Math.abs(d.value)
+        getTargetColor: d => targetColor
       })
     ];
 
