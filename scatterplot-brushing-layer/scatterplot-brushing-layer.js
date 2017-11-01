@@ -31,6 +31,7 @@ const defaultProps = {
   // brush radius in meters
   brushRadius: 100000,
   mousePosition: [0, 0],
+  strokeWidthScale: 1,
   getTargetPosition: d => d.target
 };
 

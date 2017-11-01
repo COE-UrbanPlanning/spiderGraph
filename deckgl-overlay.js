@@ -184,7 +184,7 @@ export default class DeckGLOverlay extends Component {
   }
 
   render() {
-    const {viewport, enableBrushing, brushRadius, strokeWidth,
+    const {viewport, enableBrushing, brushRadius, strokeScale,
       opacity, mouseEntered, mousePosition} = this.props;
     const {arcs, targets, sources} = this.state;
 
@@ -240,7 +240,8 @@ export default class DeckGLOverlay extends Component {
       new ArcBrushingLayer({
         id: 'arc',
         data: arcs,
-        strokeWidth: strokeWidth,
+        strokeScale: strokeScale,
+        strokeWidth: 5,
         opacity,
         brushRadius,
         enableBrushing: startBrushing,
@@ -248,7 +249,8 @@ export default class DeckGLOverlay extends Component {
         getSourcePosition: d => d.source,
         getTargetPosition: d => d.target,
         getSourceColor: d => sourceColor,
-        getTargetColor: d => targetColor
+        getTargetColor: d => targetColor,
+        getStrokeWidth: d => Math.abs(d.value)
       })
     ];
 

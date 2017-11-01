@@ -136,7 +136,7 @@ class Root extends Component {
             coords={coords}
             brushRadius={2500}
             opacity={0.3}
-            strokeWidth={2}
+            strokeScale={5}
             enableBrushing={true}
             mousePosition={mousePosition}
             mouseEntered={mouseEntered}

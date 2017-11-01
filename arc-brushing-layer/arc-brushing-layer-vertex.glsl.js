@@ -29,10 +29,11 @@ attribute vec4 instanceSourceColors;
 attribute vec4 instanceTargetColors;
 attribute vec4 instancePositions;
 attribute vec3 instancePickingColors;
+attribute float instanceStrokeWidth;
 
 uniform float numSegments;
 uniform vec2 viewportSize;
-uniform float strokeWidth;
+uniform float strokeScale;
 uniform float opacity;
 uniform float renderPickingBuffer;
 
@@ -128,7 +129,7 @@ void main(void) {
   vec4 next = project_to_clipspace(vec4(nextPos, 1.0));
    
   // mix strokeWidth with brush, if not in brush, return 0
-  float finalWidth = mix(0.0, strokeWidth, isInBrush);
+  float finalWidth = (0.0, strokeScale * instanceStrokeWidth, isInBrush);
   
   // extrude
   vec2 offset = getExtrusionOffset((next.xy - curr.xy) * indexDir, positions.y, finalWidth);

@@ -38,6 +38,15 @@ const defaultProps = {
 
 export default class ArcBrushingLayer extends ArcLayer {
 
+  initializeState() {
+    super.initializeState();
+    
+    const {attributeManager} = this.state;
+    attributeManager.addInstanced({
+      instanceStrokeWidth: {size: 1, defaultValue: 3, accessor: 'getStrokeWidth', update: this.calculateInstanceStrokeWidth}
+    });
+  }
+
   getShaders() {
     // use customized shaders
     return Object.assign({}, super.getShaders(), {
@@ -47,7 +56,6 @@ export default class ArcBrushingLayer extends ArcLayer {
   }
 
   draw({uniforms}) {
-
     // add uniforms
     super.draw({uniforms: {
       ...uniforms,
@@ -56,8 +64,19 @@ export default class ArcBrushingLayer extends ArcLayer {
       brushRadius: this.props.brushRadius,
       mousePos: this.props.mousePosition ?
         new Float32Array(this.unproject(this.props.mousePosition)) : defaultProps.mousePosition,
-      enableBrushing: this.props.enableBrushing ? 1 : 0
+      enableBrushing: this.props.enableBrushing ? 1 : 0,
+      strokeScale: this.props.strokeScale
     }});
+  }
+  
+  calculateInstanceStrokeWidth(attribute) {
+    const {data, getStrokeWidth} = this.props;
+    const {value} = attribute;
+    for (var i = 0; i < data.length; i++) {
+      const width = getStrokeWidth(data[i]);
+      value[i] = isNaN(width) ? 1 : width;
+    }
+    console.log(value);
   }
 }
 
