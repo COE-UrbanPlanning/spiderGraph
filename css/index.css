@@ -1,0 +1,17 @@
+body {
+  margin: 0; padding: 0; overflow: hidden;
+}
+
+#controls {
+  display: inline-block;
+  position: absolute;
+  top: 50px;
+  right: 50px;
+  padding: 20px 40px;
+  background-color: white;
+}
+
+.slider {
+  width: 200px;
+  height: 50px;
+}

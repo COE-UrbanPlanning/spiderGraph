@@ -2,8 +2,8 @@ import React, {Component} from 'react';
 import {scaleLinear} from 'd3-scale';
 
 import DeckGL from 'deck.gl';
-import ArcBrushingLayer from './arc-brushing-layer';
-import ScatterplotBrushingLayer from './scatterplot-brushing-layer';
+import ArcBrushingLayer from '../arc-brushing-layer';
+import ScatterplotBrushingLayer from '../scatterplot-brushing-layer';
 
 export const inFlowColors = [
   [35, 181, 184]
@@ -179,7 +179,6 @@ export default class DeckGLOverlay extends Component {
       console.warn('The following TAZs were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
     }
     
-    console.log({arcs, targets, sources});
     return {arcs, targets, sources};
   }
 
