@@ -76,11 +76,13 @@ class Root extends Component {
     }
   }
 
-  _onMouseEnter() {
-    this.setState({mouseEntered: true});
+  _onMouseOver(e) {
+    if (e.target.id === 'deckgl-overlay') {
+      this.setState({mouseEntered: true});
+    }
   }
 
-  _onMouseLeave() {
+  _onMouseOut() {
     this.setState({mouseEntered: false});
   }
 
@@ -124,8 +126,8 @@ class Root extends Component {
     
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
-           onMouseEnter={this._onMouseEnter.bind(this)}
-           onMouseOut={this._onMouseLeave.bind(this)}>
+           onMouseOver={this._onMouseOver.bind(this)}
+           onMouseOut={this._onMouseOut.bind(this)}>
         {this._renderTooltip()}
         <MapGL
           {...viewport}
