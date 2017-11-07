@@ -30,6 +30,13 @@ const DATA_URL = './data/trips_district.csv';
 const COORDS_URL = './data/coords_district.json';
 const FILTERS_URL = './filters.json';
 
+function uniq(a) {
+    var seen = {};
+    return a.filter(function(item) {
+        return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+    });
+}
+
 class Root extends Component {
 
   constructor(props) {
@@ -161,8 +168,11 @@ queue()
   .await((error, data, coords, filters) => {
     if (!error) {
       console.log('data loaded');
+      console.log(data);
     
       filters.forEach(f => {
+        data.raw_data.map(d => d[f.filter]);
+        
         if (f.startValue) {
           filter.filter(f.filter, f.startValue);
         }
