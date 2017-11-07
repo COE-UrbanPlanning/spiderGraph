@@ -26,8 +26,8 @@ const tooltipStyle = {
 };
 
 // Source data locations
-const DATA_URL = './data/trips_district.csv';
-const COORDS_URL = './data/coords_district.json';
+const DATA_URL = './data/trips_nbhd.csv';
+const COORDS_URL = './data/coords_nbhd.json';
 const FILTERS_URL = './filters.json';
 
 function uniq(a) {
@@ -143,7 +143,7 @@ class Root extends Component {
           <DeckGLOverlay viewport={viewport}
             data={data ? data : []}
             coords={coords}
-            brushRadius={2500}
+            brushRadius={1000}
             opacity={0.3}
             strokeWidth={2}
             enableBrushing={true}
@@ -168,11 +168,8 @@ queue()
   .await((error, data, coords, filters) => {
     if (!error) {
       console.log('data loaded');
-      console.log(data);
     
       filters.forEach(f => {
-        data.raw_data.map(d => d[f.filter]);
-        
         if (f.startValue) {
           filter.filter(f.filter, f.startValue);
         }

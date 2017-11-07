@@ -1,0 +1,53 @@
+[
+  {
+    "filter": "Time",
+    "label": "Time period",
+    "type": "continuous",
+    "values": [
+      ["1", "Overnight"],
+      ["2", "AM"],
+      ["3", "Midday"],
+      ["4", "PM"],
+      ["5", "Evening"]
+    ],
+    "startValue": 1
+  },
+  {
+    "filter": "Mode",
+    "label": "Travel mode",
+    "type": "check",
+    "values": [
+      ["SOV", "Car (alone)"],
+      ["HOV2", "Car (1 passenger)"],
+      ["HOV3", "Car (2+ passengers)"],
+      ["DAT", "Park and Ride"],
+      ["WAT", "Walk to Transit"],
+      ["SB", "School Bus"],
+      ["Bike", "Bike"],
+      ["Walk", "Walk"]
+    ]
+  },
+  {
+    "filter": "IncGrp",
+    "Label": "Income level",
+    "type": "check",
+    "values": [
+      ["Low", "Low"],
+      ["Med", "Medium"],
+      ["High", "High"]
+    ]
+  },
+  {
+    "filter": "HHSize",
+    "label": "Household size",
+    "type": "range",
+    "values": [
+      ["1", 1],
+      ["2", 2],
+      ["3", 3],
+      ["4", 4],
+      ["5", 5]
+    ],
+    "startValue": [1, 5]
+  }
+]

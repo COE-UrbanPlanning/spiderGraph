@@ -6,7 +6,7 @@ export default class ContinuousPanel extends Component {
     super(props);
     
     this.handler = props.handler;
-    this._notifyValue = this._notifyValue.bind(this);
+    this._notifyValues = this._notifyValues.bind(this);
     
     this.state = {
       filter: props.data.filter,
@@ -14,7 +14,15 @@ export default class ContinuousPanel extends Component {
     };
   }
 
-  _buildNumericalMap(valueMap) {
+  _valueMap(values) {
+    var valueMap = {};
+    values.forEach(v => {
+      valueMap[v[0]] = v[1];
+    });
+    return valueMap;
+  }
+  
+  _numericalMap(valueMap) {
     var newMap = {};
     try {
       Object.keys(valueMap).forEach(key => {
@@ -26,14 +34,15 @@ export default class ContinuousPanel extends Component {
     }
   }
   
-  _notifyValue(value) {
+  _notifyValues(value) {
     this.handler(this.state.filter, value);
     this.setState({currentPosition: value});
   }
   
   render() {
-    const {filter, label, type, valueMap} = this.props.data;
-    const formatMap = this._buildNumericalMap(valueMap);
+    const {filter, label, type, values} = this.props.data;
+    const valueMap = this._valueMap(values);
+    const formatMap = this._numericalMap(valueMap);
     const min = Math.min.apply(Math, Object.keys(formatMap));
     const max = Math.max.apply(Math, Object.keys(formatMap));
     
@@ -46,7 +55,7 @@ export default class ContinuousPanel extends Component {
           defaultValue={this.state.currentPosition}
           step={null}
           included={false}
-          onChange={this._notifyValue} />
+          onChange={this._notifyValues} />
       </div>
     );
   }

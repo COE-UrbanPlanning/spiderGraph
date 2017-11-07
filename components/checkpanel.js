@@ -9,8 +9,24 @@ export default class CheckPanel extends Component {
     
     this.state = {
       filter: props.data.filter,
+      values: props.data.values,
       currentSelected: null
     };
+  }
+  
+  handleClick(button) {
+    
+  }
+  
+  _buildButton(value, i) {
+    return (<div key={i}></div>);
+    // return (
+      // <div
+        // className="filter-button"
+        // onClick={this.handleClick}>
+        // {}
+      // </div>
+    // );
   }
   
   _notifyValues(values) {
@@ -21,7 +37,7 @@ export default class CheckPanel extends Component {
   render() {
     return (
       <div className="selections">
-        
+        {this.state.values.map(this._buildButton)}
       </div>
     );
   }
