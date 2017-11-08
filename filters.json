@@ -29,7 +29,7 @@
   },
   {
     "filter": "IncGrp",
-    "Label": "Income level",
+    "label": "Income level",
     "type": "check",
     "values": [
       ["Low", "Low"],
