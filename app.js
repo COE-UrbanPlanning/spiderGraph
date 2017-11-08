@@ -26,8 +26,8 @@ const tooltipStyle = {
 };
 
 // Source data locations
-const DATA_URL = './data/trips_district.csv';
-const COORDS_URL = './data/coords_district.json';
+const DATA_URL = './data/trips_nbhd.csv';
+const COORDS_URL = './data/coords_nbhd.min.geojson';
 const FILTERS_URL = './filters.json';
 
 function uniq(a) {

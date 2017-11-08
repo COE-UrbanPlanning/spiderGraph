@@ -2,8 +2,8 @@ import React, {Component} from 'react';
 import {scaleLinear} from 'd3-scale';
 
 import DeckGL, {GeoJsonLayer} from 'deck.gl';
-import ArcBrushingLayer from './arc-brushing-layer';
-import ScatterplotBrushingLayer from './scatterplot-brushing-layer';
+import ArcBrushingLayer from '../arc-brushing-layer';
+import ScatterplotBrushingLayer from '../scatterplot-brushing-layer';
 
 export const inFlowColors = [
   [35, 181, 184]
@@ -36,7 +36,8 @@ export default class DeckGLOverlay extends Component {
     this.state = {
       arcs: [],
       targets: [],
-      sources: []
+      sources: [],
+      coordsLookup: this._createCoordsLookup(props.coords)
     };
   }
 
@@ -56,9 +57,17 @@ export default class DeckGLOverlay extends Component {
     }
   }
 
+  _createCoordsLookup(geojson) {
+    var lookup = {};
+    geojson.features.forEach(feature => {
+      lookup[feature.id] = feature;
+    });
+    return lookup;
+  }
+  
   _getLayerData(props) {
     const data = props.data;
-    const coords = props.coords;
+    const coords = this.state.coordsLookup;
     
     if (!data) {
       return null;
@@ -107,7 +116,7 @@ export default class DeckGLOverlay extends Component {
       if (!pairs[[source, target]]) {
         pairs[[source, target]] = {
           name: source,
-          position: coords[source].centroid,
+          position: coords[source].properties.centroid,
           target: target,
           gain: gain,
           loss: loss
@@ -121,7 +130,7 @@ export default class DeckGLOverlay extends Component {
       if (!targetDict[target]) {
         targetDict[target] = {
           name: target,
-          position: coords[target].centroid,
+          position: coords[target].properties.centroid,
           gain: 0,
           loss: 0,
           net: 0
@@ -147,14 +156,14 @@ export default class DeckGLOverlay extends Component {
         name: name,
         gain: -gainSign,
         position: position,
-        target: coords[target].centroid,
+        target: coords[target].properties.centroid,
         radius: 0
       });
       
       arcs.push({
         points: [name, target],
         source: position,
-        target: coords[target].centroid,
+        target: coords[target].properties.centroid,
         value: net
       });
     });
@@ -184,7 +193,7 @@ export default class DeckGLOverlay extends Component {
 
   render() {
     const {viewport, enableBrushing, brushRadius, strokeWidth,
-      opacity, mouseEntered, mousePosition} = this.props;
+      opacity, mouseEntered, mousePosition, coords} = this.props;
     const {arcs, targets, sources} = this.state;
 
     // mouseEntered is undefined when mouse is in the component while it first loads
@@ -248,6 +257,17 @@ export default class DeckGLOverlay extends Component {
         getTargetPosition: d => d.target,
         getSourceColor: d => sourceColor,
         getTargetColor: d => targetColor
+      }),
+      new GeoJsonLayer({
+        id: 'geojson-layer',
+        data: coords,
+        filled: true,
+        stroked: true,
+        extruded: false,
+        pickable: true,
+        onHover: e => console.log(e),
+        getFillColor: f => [0, 0, 0, 128],
+        getLineWidth: f => 15
       })
     ];
 
