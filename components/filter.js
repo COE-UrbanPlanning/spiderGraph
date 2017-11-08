@@ -45,9 +45,16 @@ export default class DataFilter {
     });
   }
   
-  filter(dim, filterText) {
+  _getFilterCriteria(filterValues) {
+    if (!(filterValues.constructor === Array)) {
+      filterValues = [filterValues];
+    }
+    return d => filterValues.map(v => String(v)).includes(d);
+  }
+  
+  filter(dim, filterValues) {
     this.filters[dim].filterAll();
-    this.filters[dim].filter(d => d.startsWith(filterText));
+    this.filters[dim].filter(this._getFilterCriteria(filterValues));
     return this;
   }
 }

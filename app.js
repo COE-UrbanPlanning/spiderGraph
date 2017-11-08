@@ -5,8 +5,9 @@ import MapGL from 'react-map-gl';
 import {queue} from 'd3-queue';
 import {json as requestJSON} from 'd3-request';
 
-import DeckGLOverlay from './deckgl-overlay.js';
-import DataFilter from './filter.js';
+import DeckGLOverlay from './components/deckgl-overlay.js';
+import DataFilter from './components/filter.js';
+import Controls from './components/controls.js';
 
 import {json as requestJson} from 'd3-request';
 
@@ -25,8 +26,16 @@ const tooltipStyle = {
 };
 
 // Source data locations
-const DATA_URL = 'trips_district.csv';
-const COORDS_URL = 'coords_district.json';
+const DATA_URL = './data/trips_district.csv';
+const COORDS_URL = './data/coords_district.json';
+const FILTERS_URL = './filters.json';
+
+function uniq(a) {
+    var seen = {};
+    return a.filter(function(item) {
+        return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+    });
+}
 
 class Root extends Component {
 
@@ -34,6 +43,7 @@ class Root extends Component {
     super(props);
     
     this.filter = props.filter; 
+    this.filterMap = this.filterMap.bind(this);
     
     this.state = {
       viewport: {
@@ -43,17 +53,14 @@ class Root extends Component {
       },
       data: null,
       coords: props.coords,
+      filterConfig: props.filterConfig,
       mousePosition: [0, 0]
     };
   }
 
   componentDidMount() {
     window.addEventListener('resize', this._resize.bind(this));
-    this.resetFilters();
-    var nameInput = document.getElementById('name_input');
-    name_input.addEventListener('input', (function(e) {
-      this.filterMap('IncGrp', e.target.value);
-    }).bind(this));
+    this.draw();
     this._resize();
   }
 
@@ -76,11 +83,13 @@ class Root extends Component {
     }
   }
 
-  _onMouseEnter() {
-    this.setState({mouseEntered: true});
+  _onMouseOver(e) {
+    if (e.target.id === 'deckgl-overlay') {
+      this.setState({mouseEntered: true});
+    }
   }
 
-  _onMouseLeave() {
+  _onMouseOut() {
     this.setState({mouseEntered: false});
   }
 
@@ -120,12 +129,12 @@ class Root extends Component {
   }
   
   render() {
-    const {viewport, data, coords, mousePosition, mouseEntered} = this.state;
+    const {viewport, data, coords, filterConfig, mousePosition, mouseEntered} = this.state;
     
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
-           onMouseEnter={this._onMouseEnter.bind(this)}
-           onMouseLeave={this._onMouseLeave.bind(this)}>
+           onMouseOver={this._onMouseOver.bind(this)}
+           onMouseOut={this._onMouseOut.bind(this)}>
         {this._renderTooltip()}
         <MapGL
           {...viewport}
@@ -134,7 +143,7 @@ class Root extends Component {
           <DeckGLOverlay viewport={viewport}
             data={data ? data : []}
             coords={coords}
-            brushRadius={2500}
+            brushRadius={1000}
             opacity={0.3}
             strokeWidth={2}
             enableBrushing={true}
@@ -143,6 +152,7 @@ class Root extends Component {
             onHover={this._onHover.bind(this)}
           />
         </MapGL>
+        <Controls filters={filterConfig} handler={this.filterMap}/>
       </div>
     );
   }
@@ -154,10 +164,22 @@ window.filter = filter;
 queue()
   .defer(filter.loadData.bind(filter), DATA_URL)
   .defer(requestJSON, COORDS_URL)
-  .await((error, data, coords) => {
-    console.log('data loaded');
+  .defer(requestJSON, FILTERS_URL)
+  .await((error, data, coords, filters) => {
+    if (!error) {
+      console.log('data loaded');
     
-    render(<Root filter={filter}
-             coords={coords}/>,
-           document.getElementById("map"));
+      filters.forEach(f => {
+        if (f.startValue) {
+          filter.filter(f.filter, f.startValue);
+        }
+      });
+    
+      render(<Root filter={filter}
+              filterConfig={filters}
+              coords={coords}/>,
+        document.getElementById("map"));
+    } else {
+      console.error(error);
+    }
   });

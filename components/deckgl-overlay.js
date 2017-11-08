@@ -179,7 +179,6 @@ export default class DeckGLOverlay extends Component {
       console.warn('The following TAZs were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
     }
     
-    console.log({arcs, targets, sources});
     return {arcs, targets, sources};
   }
 
