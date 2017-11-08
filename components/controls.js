@@ -39,7 +39,12 @@ export default class Controls extends Component {
   }
   
   _getFilterComponent(filter, i) {
-    return this.state.panels[filter.type].bind(this)(filter, i);
+    return (
+      <div>
+        <h3>{filter.label}</h3>
+        {this.state.panels[filter.type].bind(this)(filter, i)}
+      </div>
+    );
   }
   
   render() {
