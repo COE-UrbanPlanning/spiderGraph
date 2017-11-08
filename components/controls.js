@@ -20,27 +20,27 @@ export default class Controls extends Component {
     };
   }
   
-  _buildCheckPanel(filter, i) {
+  _buildCheckPanel(filter) {
     return (
-      <CheckPanel key={i} data={filter} handler={this.props.handler}/>
+      <CheckPanel data={filter} handler={this.props.handler}/>
     );
   }
   
-  _buildContinuousPanel(filter, i) {
+  _buildContinuousPanel(filter) {
     return (
-      <ContinuousPanel key={i} data={filter} handler={this.props.handler}/>
+      <ContinuousPanel data={filter} handler={this.props.handler}/>
     );
   }
   
-  _buildRangePanel(filter, i) {
+  _buildRangePanel(filter) {
     return (
-      <RangePanel key={i} data={filter} handler={this.props.handler}/>
+      <RangePanel data={filter} handler={this.props.handler}/>
     );
   }
   
   _getFilterComponent(filter, i) {
     return (
-      <div>
+      <div key={i}>
         <h3>{filter.label}</h3>
         {this.state.panels[filter.type].bind(this)(filter, i)}
       </div>
