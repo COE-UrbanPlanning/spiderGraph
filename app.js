@@ -129,7 +129,7 @@ class Root extends Component {
   }
   
   render() {
-    const {viewport, data, coords, brushRadius, filterConfig, mousePosition, mouseEntered, hoveredObject: object} = this.state;
+    const {viewport, data, coords, filterConfig, mouseEntered, hoveredObject: object} = this.state;
     
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
@@ -144,11 +144,9 @@ class Root extends Component {
             data={data ? data : []}
             coords={coords}
             feature={object}
-            brushRadius={1000}
             opacity={0.3}
             strokeWidth={2}
             enableBrushing={true}
-            mousePosition={mousePosition}
             mouseEntered={mouseEntered}
             onHover={this._onHover.bind(this)}
           />

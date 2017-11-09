@@ -25,15 +25,10 @@ import arcFragment from './arc-brushing-layer-fragment.glsl';
 
 const defaultProps = {
   ...ArcLayer.defaultProps,
-  // show arc if source is in brush
-  brushSource: true,
-  // show arc if target is in brush
-  brushTarget: true,
   enableBrushing: true,
   getStrokeWidth: d => d.strokeWidth,
   getSourceID: d => Number(d.sourceID),
-  getTargetID: d => Number(d.targetID),
-  mousePosition: [0, 0]
+  getTargetID: d => Number(d.targetID)
 };
 
 export default class ArcBrushingLayer extends ArcLayer {
@@ -61,12 +56,7 @@ export default class ArcBrushingLayer extends ArcLayer {
     // add uniforms
     super.draw({uniforms: {
       ...uniforms,
-      brushSource: this.props.brushSource,
-      brushTarget: this.props.brushTarget,
-      brushRadius: 1000,
       featureID: this.props.featureID ? Number(this.props.featureID) : -1,
-      mousePos: this.props.mousePosition ?
-        new Float32Array(this.unproject(this.props.mousePosition)) : defaultProps.mousePosition,
       enableBrushing: this.props.enableBrushing ? 1 : 0
     }});
   }

@@ -35,8 +35,6 @@ export default class DeckGLOverlay extends Component {
     super(props);
     this.state = {
       arcs: [],
-      targets: [],
-      sources: [],
       coordsLookup: this._createCoordsLookup(props.coords)
     };
   }
@@ -74,10 +72,7 @@ export default class DeckGLOverlay extends Component {
     }
     
     const pairs = {};
-    const targetDict = {};
     const arcs = [];
-    const targets = [];
-    const sources = [];
     const not_found = [];
     
     function processData(trip) {
@@ -125,40 +120,14 @@ export default class DeckGLOverlay extends Component {
         pairs[[source, target]].gain += gain;
         pairs[[source, target]].loss += loss;
       }
-      
-      // needs gain, loss, net, radius
-      if (!targetDict[target]) {
-        targetDict[target] = {
-          name: target,
-          position: coords[target].properties.centroid,
-          gain: 0,
-          loss: 0,
-          net: 0
-        };
-      }
     }
     
-    // data.forEach(processData);
-    for (var i = 0; i < data.length; i++) {
-      processData(data[i]);
-    }
+    data.forEach(processData);
     
     Object.keys(pairs).forEach(pairKey => {
       const {name, position, target, gain, loss} = pairs[pairKey];
       const gainSign = Math.sign(gain);
       const net = gain + loss;
-      
-      targetDict[target].gain += gain;
-      targetDict[target].loss += loss;
-      targetDict[target].net += net;
-      
-      sources.push({
-        name: name,
-        gain: -gainSign,
-        position: position,
-        target: coords[target].properties.centroid,
-        radius: 0
-      });
       
       arcs.push({
         sourceID: name,
@@ -169,83 +138,27 @@ export default class DeckGLOverlay extends Component {
       });
     });
     
-    Object.keys(targetDict).forEach(target => {
-      targets.push(targetDict[target]);
-    });
-    
-    // sort targets by radius large -> small
-    targets.sort((a, b) => Math.abs(b.net) - Math.abs(a.net));
-    if (targets.length > 0) {
-      const sizeScale = scaleLinear()
-      .domain([0, Math.abs(targets[0].net)])
-      .range([0.0036, 0.04]);
-
-      targets.forEach(pt => {
-        pt.radius = Math.sqrt(sizeScale(Math.abs(pt.net)));
-      });
-    }
-    
     if (not_found.length > 0) {
       console.warn('The following TAZs were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
     }
     
-    return {arcs, targets, sources};
+    return {arcs};
   }
 
   render() {
-    const {viewport, enableBrushing, strokeWidth, feature, brushRadius,
-      opacity, mouseEntered, mousePosition, coords} = this.props;
-    const {arcs, targets, sources} = this.state;
+    const {viewport, enableBrushing, strokeWidth, feature, opacity, mouseEntered, coords} = this.props;
+    const {arcs} = this.state;
 
     // mouseEntered is undefined when mouse is in the component while it first loads
     // enableBrushing if mouseEntered is not defined
     const isMouseover = mouseEntered !== false;
     const startBrushing = Boolean(isMouseover && enableBrushing);
 
-    if (!arcs || !targets) {
+    if (!arcs) {
       return null;
     }
 
     const layers = [
-      new ScatterplotBrushingLayer({
-        id: 'sources',
-        data: sources,
-        brushRadius,
-        brushTarget: true,
-        mousePosition,
-        opacity: 1,
-        enableBrushing: startBrushing,
-        pickable: false,
-        // only show source points when brushing
-        radiusScale: startBrushing ? 3000 : 0,
-        getColor: d => (d.gain > 0 ? targetColor : sourceColor),
-        getTargetPosition: d => [d[0], d[1], 0]
-      }),
-      new ScatterplotBrushingLayer({
-        id: 'targets-ring',
-        data: targets,
-        brushRadius,
-        mousePosition,
-        strokeWidth: 2,
-        outline: true,
-        opacity: 1,
-        enableBrushing: startBrushing,
-        // only show rings when brushing
-        radiusScale: startBrushing ? 4000 : 0,
-        getColor: d => (d.net > 0 ? targetColor : sourceColor)
-      }),
-      new ScatterplotBrushingLayer({
-        id: 'targets',
-        data: targets,
-        brushRadius,
-        mousePosition,
-        opacity: 1,
-        enableBrushing: startBrushing,
-        // pickable: true,
-        radiusScale: 3000,
-        // onHover: this.props.onHover,
-        getColor: d => (d.net > 0 ? targetColor : sourceColor)
-      }),
       new ArcBrushingLayer({
         id: 'arc',
         data: arcs,
@@ -253,7 +166,6 @@ export default class DeckGLOverlay extends Component {
         opacity,
         featureID: feature ? feature.id : null,
         enableBrushing: startBrushing,
-        mousePosition,
         getSourcePosition: d => d.source,
         getTargetPosition: d => d.target,
         getSourceColor: d => sourceColor,

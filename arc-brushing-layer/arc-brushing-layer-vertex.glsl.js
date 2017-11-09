@@ -40,35 +40,11 @@ uniform float opacity;
 uniform float renderPickingBuffer;
 
 // uniform for brushing
-uniform vec2 mousePos;
-uniform float brushRadius;
 uniform float enableBrushing;
-uniform float brushSource;
-uniform float brushTarget;
 uniform float featureID;
 
 varying vec4 vColor;
 
-// approximate distance between lng lat in meters
-float distanceBetweenLatLng(vec2 source, vec2 target) {
-
-  vec2 delta = (source - target) * PI / 180.0;
-
-  float a =
-    sin(delta.y / 2.0) * sin(delta.y / 2.0) +
-    cos(source.y * PI / 180.0) * cos(target.y * PI / 180.0) *
-    sin(delta.x / 2.0) * sin(delta.x / 2.0);
-
-  float c = 2.0 * atan(sqrt(a), sqrt(1.0 - a));
-
-  return R_EARTH * c;
-}
-
-// range is km
-float isPointInRange(vec2 ptLatLng, vec2 mouseLatLng, float range, float enabled) {
-
-  return float(enabled <= 0.0 || distanceBetweenLatLng(ptLatLng, mouseLatLng) <= range);
-}
 
 float paraboloid(vec2 source, vec2 target, float ratio) {
 
@@ -115,13 +91,6 @@ void main(void) {
   vec2 source = project_position(instancePositions.xy);
   vec2 target = project_position(instancePositions.zw);
 
-  // if not enabled isPointInRange will always return true
-  // float isSourceInBrush = isPointInRange(instancePositions.xy, mousePos, brushRadius, brushSource);
-  // float isTargetInBrush = isPointInRange(instancePositions.zw, mousePos, brushRadius, brushTarget);
-  
-  // float isInBrush = float(enableBrushing <= 0. || 
-  // (brushSource * isSourceInBrush > 0. || brushTarget * isTargetInBrush > 0.));
-
   float segmentIndex = positions.x;
   float segmentRatio = getSegmentRatio(segmentIndex);
   
@@ -137,7 +106,6 @@ void main(void) {
    
   // mix strokeWidth with brush, if not in brush, return 0
   float finalWidth = mix(0.0, strokeWidth, isInFeature(instanceSource, instanceTarget, featureID, enableBrushing));
-  // float finalWidth = mix(0.0, strokeWidth, isInBrush);
   
   // extrude
   vec2 offset = getExtrusionOffset((next.xy - curr.xy) * indexDir, positions.y, finalWidth);
