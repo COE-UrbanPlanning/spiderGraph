@@ -30,6 +30,9 @@ attribute vec4 instanceTargetColors;
 attribute vec4 instancePositions;
 attribute vec3 instancePickingColors;
 
+attribute float instanceSource;
+attribute float instanceTarget;
+
 uniform float numSegments;
 uniform vec2 viewportSize;
 uniform float strokeWidth;
@@ -42,6 +45,7 @@ uniform float brushRadius;
 uniform float enableBrushing;
 uniform float brushSource;
 uniform float brushTarget;
+uniform float featureID;
 
 varying vec4 vColor;
 
@@ -103,16 +107,23 @@ vec3 getPos(vec2 source, vec2 target, float segmentRatio) {
   );
 }
 
+float isInFeature(float source, float target, float feature) {
+  if (source == feature || target == feature) {
+    return 1.0;
+  }
+  return 0.0;
+}
+
 void main(void) {
   vec2 source = project_position(instancePositions.xy);
   vec2 target = project_position(instancePositions.zw);
 
   // if not enabled isPointInRange will always return true
-  float isSourceInBrush = isPointInRange(instancePositions.xy, mousePos, brushRadius, brushSource);
-  float isTargetInBrush = isPointInRange(instancePositions.zw, mousePos, brushRadius, brushTarget);
-
-  float isInBrush = float(enableBrushing <= 0. || 
-  (brushSource * isSourceInBrush > 0. || brushTarget * isTargetInBrush > 0.));
+  // float isSourceInBrush = isPointInRange(instancePositions.xy, mousePos, brushRadius, brushSource);
+  // float isTargetInBrush = isPointInRange(instancePositions.zw, mousePos, brushRadius, brushTarget);
+  
+  // float isInBrush = float(enableBrushing <= 0. || 
+  // (brushSource * isSourceInBrush > 0. || brushTarget * isTargetInBrush > 0.));
 
   float segmentIndex = positions.x;
   float segmentRatio = getSegmentRatio(segmentIndex);
@@ -128,7 +139,8 @@ void main(void) {
   vec4 next = project_to_clipspace(vec4(nextPos, 1.0));
    
   // mix strokeWidth with brush, if not in brush, return 0
-  float finalWidth = mix(0.0, strokeWidth, isInBrush);
+  float finalWidth = mix(0.0, strokeWidth, isInFeature(instanceSource, instanceTarget, featureID));
+  // float finalWidth = mix(0.0, strokeWidth, isInBrush);
   
   // extrude
   vec2 offset = getExtrusionOffset((next.xy - curr.xy) * indexDir, positions.y, finalWidth);

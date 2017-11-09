@@ -129,7 +129,7 @@ class Root extends Component {
   }
   
   render() {
-    const {viewport, data, coords, filterConfig, mousePosition, mouseEntered} = this.state;
+    const {viewport, data, coords, brushRadius, filterConfig, mousePosition, mouseEntered, hoveredObject: object} = this.state;
     
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
@@ -143,6 +143,7 @@ class Root extends Component {
           <DeckGLOverlay viewport={viewport}
             data={data ? data : []}
             coords={coords}
+            feature={object}
             brushRadius={1000}
             opacity={0.3}
             strokeWidth={2}

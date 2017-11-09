@@ -161,7 +161,8 @@ export default class DeckGLOverlay extends Component {
       });
       
       arcs.push({
-        points: [name, target],
+        sourceID: name,
+        targetID: target,
         source: position,
         target: coords[target].properties.centroid,
         value: net
@@ -192,7 +193,7 @@ export default class DeckGLOverlay extends Component {
   }
 
   render() {
-    const {viewport, enableBrushing, brushRadius, strokeWidth,
+    const {viewport, enableBrushing, strokeWidth, feature, brushRadius,
       opacity, mouseEntered, mousePosition, coords} = this.props;
     const {arcs, targets, sources} = this.state;
 
@@ -240,9 +241,9 @@ export default class DeckGLOverlay extends Component {
         mousePosition,
         opacity: 1,
         enableBrushing: startBrushing,
-        pickable: true,
+        // pickable: true,
         radiusScale: 3000,
-        onHover: this.props.onHover,
+        // onHover: this.props.onHover,
         getColor: d => (d.net > 0 ? targetColor : sourceColor)
       }),
       new ArcBrushingLayer({
@@ -250,7 +251,7 @@ export default class DeckGLOverlay extends Component {
         data: arcs,
         strokeWidth: strokeWidth,
         opacity,
-        brushRadius,
+        featureID: feature ? feature.id : null,
         enableBrushing: startBrushing,
         mousePosition,
         getSourcePosition: d => d.source,
@@ -265,12 +266,12 @@ export default class DeckGLOverlay extends Component {
         stroked: true,
         extruded: false,
         pickable: true,
-        onHover: e => console.log(e),
+        onHover: this.props.onHover,
         getFillColor: f => [0, 0, 0, 128],
         getLineWidth: f => 15
       })
     ];
-
+    
     return (
       <DeckGL {...viewport} layers={ layers } initWebGLParameters />
     );

@@ -31,12 +31,23 @@ const defaultProps = {
   brushTarget: true,
   enableBrushing: true,
   getStrokeWidth: d => d.strokeWidth,
-  // brush radius in meters
-  brushRadius: 100000,
+  getSourceID: d => Number(d.sourceID),
+  getTargetID: d => Number(d.targetID),
   mousePosition: [0, 0]
 };
 
 export default class ArcBrushingLayer extends ArcLayer {
+
+  initializeState() {
+    super.initializeState();
+    
+    const {attributeManager} = this.state;
+    
+    attributeManager.addInstanced({
+      instanceSource: {size: 1, accessor: 'getSourceID', update: this.getInstanceSource},
+      instanceTarget: {size: 1, accessor: 'getTargetID', update: this.getInstanceTarget}
+    });
+  }
 
   getShaders() {
     // use customized shaders
@@ -47,17 +58,35 @@ export default class ArcBrushingLayer extends ArcLayer {
   }
 
   draw({uniforms}) {
-
     // add uniforms
     super.draw({uniforms: {
       ...uniforms,
       brushSource: this.props.brushSource,
       brushTarget: this.props.brushTarget,
-      brushRadius: this.props.brushRadius,
+      brushRadius: 1000,
+      featureID: this.props.featureID ? Number(this.props.featureID) : -1,
       mousePos: this.props.mousePosition ?
         new Float32Array(this.unproject(this.props.mousePosition)) : defaultProps.mousePosition,
       enableBrushing: this.props.enableBrushing ? 1 : 0
     }});
+  }
+  
+  getInstanceSource(attribute) {
+    const {data, getSourceID} = this.props;
+    const {value} = attribute;
+    
+    for (var i = 0; i < data.length; i++) {
+      value[i] = getSourceID(data[i]);
+    }
+  }
+  
+  getInstanceTarget(attribute) {
+    const {data, getTargetID} = this.props;
+    const {value} = attribute;
+    
+    for (var i = 0; i < data.length; i++) {
+      value[i] = getTargetID(data[i]);
+    }
   }
 }
 
