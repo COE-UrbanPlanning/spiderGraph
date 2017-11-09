@@ -107,11 +107,8 @@ vec3 getPos(vec2 source, vec2 target, float segmentRatio) {
   );
 }
 
-float isInFeature(float source, float target, float feature) {
-  if (source == feature || target == feature) {
-    return 1.0;
-  }
-  return 0.0;
+float isInFeature(float source, float target, float feature, float enabled) {
+  return float(enabled <= 0.0 || source == feature || target == feature);
 }
 
 void main(void) {
@@ -139,7 +136,7 @@ void main(void) {
   vec4 next = project_to_clipspace(vec4(nextPos, 1.0));
    
   // mix strokeWidth with brush, if not in brush, return 0
-  float finalWidth = mix(0.0, strokeWidth, isInFeature(instanceSource, instanceTarget, featureID));
+  float finalWidth = mix(0.0, strokeWidth, isInFeature(instanceSource, instanceTarget, featureID, enableBrushing));
   // float finalWidth = mix(0.0, strokeWidth, isInBrush);
   
   // extrude
