@@ -103,10 +103,10 @@ class Root extends Component {
     if (!hoveredObject) {
       return null;
     }
-
+    
     return (
       <div style={{...tooltipStyle, left: x, top: y}}>
-        <div>{hoveredObject.name}</div>
+        <div>{hoveredObject.id}</div>
         <div>{`Net gain: ${hoveredObject.net}`}</div>
       </div>
     );

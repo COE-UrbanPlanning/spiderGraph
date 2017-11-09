@@ -35,7 +35,11 @@ export default class DeckGLOverlay extends Component {
     super(props);
     this.state = {
       arcs: [],
-      coordsLookup: this._createCoordsLookup(props.coords)
+      targetDict: {},
+      coordsLookup: this._createCoordsLookup(props.coords),
+      scale: scaleLinear()
+        .domain([0, 1000])
+        .range(['white', 'rgb(30,144,255)'])
     };
   }
 
@@ -72,6 +76,7 @@ export default class DeckGLOverlay extends Component {
     }
     
     const pairs = {};
+    const targetDict = {};
     const arcs = [];
     const not_found = [];
     
@@ -120,14 +125,27 @@ export default class DeckGLOverlay extends Component {
         pairs[[source, target]].gain += gain;
         pairs[[source, target]].loss += loss;
       }
+      
+      if (!targetDict[target]) {
+        targetDict[target] = {
+          name: target,
+          position: coords[target].properties.centroid,
+          gain: 0,
+          loss: 0,
+          net: 0
+        };
+      }
     }
     
     data.forEach(processData);
     
     Object.keys(pairs).forEach(pairKey => {
       const {name, position, target, gain, loss} = pairs[pairKey];
-      const gainSign = Math.sign(gain);
       const net = gain + loss;
+      
+      targetDict[target].gain += gain;
+      targetDict[target].loss += loss;
+      targetDict[target].net += net;
       
       arcs.push({
         sourceID: name,
@@ -142,12 +160,25 @@ export default class DeckGLOverlay extends Component {
       console.warn('The following TAZs were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
     }
     
-    return {arcs};
+    return {arcs, targetDict};
   }
 
+  _getFillColour(targets, f) {
+    var target = targets[f.id];
+    if (!target) {
+      return [0, 0, 0, 0];
+    }
+    var colourString = this.state.scale(target.gain);
+    var colourArray = colourString.substring(colourString.indexOf('(') + 1, colourString.lastIndexOf(')')).split(/,\s*/);
+    if (colourArray.length === 3) {
+      colourArray.push(255);
+    }
+    return colourArray;
+  }
+  
   render() {
     const {viewport, enableBrushing, strokeWidth, feature, opacity, mouseEntered, coords} = this.props;
-    const {arcs} = this.state;
+    const {arcs, targetDict: targets} = this.state;
 
     // mouseEntered is undefined when mouse is in the component while it first loads
     // enableBrushing if mouseEntered is not defined
@@ -157,8 +188,22 @@ export default class DeckGLOverlay extends Component {
     if (!arcs) {
       return null;
     }
-
+    
     const layers = [
+      new GeoJsonLayer({
+        id: 'geojson-layer',
+        data: coords,
+        filled: true,
+        stroked: true,
+        extruded: false,
+        pickable: true,
+        onHover: this.props.onHover,
+        getFillColor: f => this._getFillColour(targets, f),
+        getLineWidth: f => 15,
+        updateTriggers: {
+          getFillColor: [targets]
+        }
+      }),
       new ArcBrushingLayer({
         id: 'arc',
         data: arcs,
@@ -170,17 +215,6 @@ export default class DeckGLOverlay extends Component {
         getTargetPosition: d => d.target,
         getSourceColor: d => sourceColor,
         getTargetColor: d => targetColor
-      }),
-      new GeoJsonLayer({
-        id: 'geojson-layer',
-        data: coords,
-        filled: true,
-        stroked: true,
-        extruded: false,
-        pickable: true,
-        onHover: this.props.onHover,
-        getFillColor: f => [0, 0, 0, 128],
-        getLineWidth: f => 15
       })
     ];
     
