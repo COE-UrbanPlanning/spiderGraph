@@ -37,6 +37,114 @@ function uniq(a) {
     });
 }
 
+function getLayerData(data, coordsLookup) {
+  
+  if (!data) {
+    return null;
+  }
+  
+  const pairs = {};
+  const targetDict = {};
+  const arcs = [];
+  const not_found = [];
+  
+  function processData(trip) {
+    const source = trip['I'];
+    const target = trip['J'];
+    const count = Number(trip['count']);
+    
+    var error = false;
+    if (!coordsLookup.hasOwnProperty(source)) {
+      error = true;
+      if (!not_found.includes(source)) {
+        not_found.push(source);
+      }
+    }
+    if (!coordsLookup.hasOwnProperty(target)) {
+      error = true;
+      if (!not_found.includes(target)) {
+        not_found.push(target);
+      }
+    }
+    if (error) {
+      return;
+    }
+    
+    const key = [source, target].sort((a, b) => Number(a) - Number(b));
+    let gain = 0;
+    let loss = 0;
+    // detect reverse trip
+    if (key[0] === source) {
+      gain = count;
+    } else {
+      loss = -count;
+    }
+    
+    let pair = pairs[[source, target]];
+    if (!pairs[[source, target]]) {
+      pairs[[source, target]] = {
+        name: source,
+        position: coordsLookup[source].properties.centroid,
+        target: target,
+        gain: gain,
+        loss: loss
+      };
+    } else {
+      pairs[[source, target]].gain += gain;
+      pairs[[source, target]].loss += loss;
+    }
+    
+    if (!targetDict[target]) {
+      targetDict[target] = {
+        name: target,
+        position: coordsLookup[target].properties.centroid,
+        gain: 0,
+        loss: 0,
+        net: 0
+      };
+    }
+  }
+  
+  data.forEach(processData);
+  
+  Object.keys(pairs).forEach(pairKey => {
+    const {name, position, target, gain, loss} = pairs[pairKey];
+    const net = gain + loss;
+    
+    targetDict[target].gain += gain;
+    targetDict[target].loss += loss;
+    targetDict[target].net += net;
+    
+    arcs.push({
+      sourceID: name,
+      targetID: target,
+      source: position,
+      target: coordsLookup[target].properties.centroid,
+      value: net
+    });
+  });
+  
+  if (not_found.length > 0) {
+    console.warn('The following zones were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
+  }
+  
+  return {arcs, targetDict};
+}
+
+function getLayerDataCalculator(lookup) {
+  return function(data) {
+    return getLayerData(data, lookup);
+  }
+}
+
+function createCoordsLookup(geojson) {
+  var lookup = {};
+  geojson.features.forEach(feature => {
+    lookup[feature.id] = feature;
+  });
+  return lookup;
+}
+
 class Root extends Component {
 
   constructor(props) {
@@ -93,21 +201,23 @@ class Root extends Component {
     this.setState({mouseEntered: false});
   }
 
-  _onHover({x, y, object}) {
-    this.setState({x, y, hoveredObject: object});
+  _onHover({x, y, hoveredObject, target}) {
+    this.setState({x, y, hoveredObject, tooltipTarget: target});
   }
 
   _renderTooltip() {
-    const {x, y, hoveredObject} = this.state;
+    const {x, y, hoveredObject, tooltipTarget} = this.state;
 
     if (!hoveredObject) {
       return null;
     }
     
+    const net = tooltipTarget ? tooltipTarget.net : 0;
+
     return (
       <div style={{...tooltipStyle, left: x, top: y}}>
         <div>{hoveredObject.id}</div>
-        <div>{`Net gain: ${hoveredObject.net}`}</div>
+        <div>{`Net gain: ${net}`}</div>
       </div>
     );
   }
@@ -129,7 +239,8 @@ class Root extends Component {
   }
   
   render() {
-    const {viewport, data, coords, filterConfig, mouseEntered, hoveredObject: object} = this.state;
+    const {viewport, data, mouseEntered, hoveredObject: object} = this.state;
+    const {filterConfig, coords, calcMethod, maximum} = this.props;
     
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
@@ -144,6 +255,8 @@ class Root extends Component {
             data={data ? data : []}
             coords={coords}
             feature={object}
+            calcMethod={calcMethod}
+            maximum={maximum}
             opacity={0.3}
             strokeWidth={2}
             enableBrushing={true}
@@ -167,6 +280,10 @@ queue()
   .await((error, data, coords, filters) => {
     if (!error) {
       console.log('data loaded');
+      
+      const coordsLookup = createCoordsLookup(coords);
+      const initLayerData = getLayerData(filter.result, coordsLookup);
+      const gainValues = Object.keys(initLayerData.targetDict).map(k => initLayerData.targetDict[k].gain);
     
       filters.forEach(f => {
         if (f.startValue) {
@@ -176,7 +293,9 @@ queue()
     
       render(<Root filter={filter}
               filterConfig={filters}
-              coords={coords}/>,
+              coords={coords}
+              maximum={Math.max(...gainValues)}
+              calcMethod={getLayerDataCalculator(coordsLookup)} />,
         document.getElementById("map"));
     } else {
       console.error(error);
