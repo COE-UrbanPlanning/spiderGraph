@@ -13,6 +13,24 @@ export const outFlowColors = [
   [166, 3, 3]
 ];
 
+const colorbrewer_WhBu =[
+  'rgb(247,247,247)',
+  'rgb(209,229,240)',
+  'rgb(146,197,222)',
+  'rgb(67,147,195)',
+  'rgb(33,102,172)',
+  'rgb(5,48,97)'
+];
+
+const colorbrewer_WhRd = [
+  'rgb(247,247,247)',
+  'rgb(253,219,199)',
+  'rgb(244,165,130)',
+  'rgb(214,96,77)',
+  'rgb(178,24,43)',
+  'rgb(103,0,31)'
+];
+
 // migrate out
 const sourceColor = [166, 3, 3];
 // migrate in
@@ -47,9 +65,8 @@ export default class DeckGLOverlay extends Component {
     this.state = {
       arcs: [],
       targetDict: {},
-      scale: scaleLinear()
-        .domain([0, props.maximum])
-        .range(['white', 'rgb(30,144,255)'])
+      posScale: scaleLinear().range(['rgb(247,247,247)', 'rgb(5,48,97)']),
+      negScale: scaleLinear().range(['rgb(103,0,31)', 'rgb(247,247,247)'])
     };
   }
 
@@ -102,12 +119,13 @@ export default class DeckGLOverlay extends Component {
     }
   }
 
-  _getFillColour(targets, f) {
+  _getFillColour(targets, f, max) {
     var target = targets[f.id];
     if (!target) {
       return [0, 0, 0, 0];
     }
-    var colourString = this.state.scale(target.gain);
+    const scale = target.net >= 0 ? this.state.posScale : this.state.negScale;
+    var colourString = scale(target.net);
     var colourArray = colourString.substring(colourString.indexOf('(') + 1, colourString.lastIndexOf(')')).split(/,\s*/);
     if (colourArray.length === 3) {
       colourArray.push(255);
@@ -118,6 +136,11 @@ export default class DeckGLOverlay extends Component {
   render() {
     const {viewport, enableBrushing, strokeWidth, feature, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
+
+    const possibleValues = Object.keys(targets).map(k => targets[k].net);
+    const highestFiltered = Math.max(Math.max(...possibleValues), Math.abs(Math.min(...possibleValues)));
+    this.state.posScale.domain([0, highestFiltered]);
+    this.state.negScale.domain([-highestFiltered, 0]);
 
     // mouseEntered is undefined when mouse is in the component while it first loads
     // enableBrushing if mouseEntered is not defined
@@ -137,7 +160,7 @@ export default class DeckGLOverlay extends Component {
         extruded: false,
         pickable: true,
         onHover: this._onHover.bind(this),
-        getFillColor: f => this._getFillColour(targets, f),
+        getFillColor: f => this._getFillColour(targets, f, highestFiltered),
         getLineWidth: f => 15,
         updateTriggers: {
           getFillColor: [targets]

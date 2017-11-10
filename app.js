@@ -240,7 +240,7 @@ class Root extends Component {
   
   render() {
     const {viewport, data, mouseEntered, hoveredObject: object} = this.state;
-    const {filterConfig, coords, calcMethod, maximum} = this.props;
+    const {filterConfig, coords, calcMethod, dataBounds} = this.props;
     
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
@@ -256,7 +256,7 @@ class Root extends Component {
             coords={coords}
             feature={object}
             calcMethod={calcMethod}
-            maximum={maximum}
+            dataBounds={dataBounds}
             opacity={0.3}
             strokeWidth={2}
             enableBrushing={true}
@@ -283,7 +283,9 @@ queue()
       
       const coordsLookup = createCoordsLookup(coords);
       const initLayerData = getLayerData(filter.result, coordsLookup);
-      const gainValues = Object.keys(initLayerData.targetDict).map(k => initLayerData.targetDict[k].gain);
+      const gainValues = Object.keys(initLayerData.targetDict).map(k => initLayerData.targetDict[k].net);
+      // const min = Math.min(...gainValues);
+      // const max = Math.max(...gainValues);
     
       filters.forEach(f => {
         if (f.startValue) {
@@ -294,7 +296,7 @@ queue()
       render(<Root filter={filter}
               filterConfig={filters}
               coords={coords}
-              maximum={Math.max(...gainValues)}
+              dataBounds={gainValues}
               calcMethod={getLayerDataCalculator(coordsLookup)} />,
         document.getElementById("map"));
     } else {
