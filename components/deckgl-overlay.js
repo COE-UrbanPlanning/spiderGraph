@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import {scaleLinear} from 'd3-scale';
+import {scaleQuantile, scaleThreshold} from 'd3-scale';
+import {ckmeans} from 'simple-statistics';
 
 import DeckGL, {GeoJsonLayer} from 'deck.gl';
 import ArcBrushingLayer from '../arc-brushing-layer';
@@ -13,8 +14,11 @@ export const outFlowColors = [
   [166, 3, 3]
 ];
 
-const colorbrewer_WhBu =[
-  'rgb(247,247,247)',
+const mapWhite = 'rgb(247,247,247)';
+const buckets = 6;
+
+const colorbrewer_WhBu = [
+  mapWhite,
   'rgb(209,229,240)',
   'rgb(146,197,222)',
   'rgb(67,147,195)',
@@ -23,12 +27,12 @@ const colorbrewer_WhBu =[
 ];
 
 const colorbrewer_WhRd = [
-  'rgb(247,247,247)',
-  'rgb(253,219,199)',
-  'rgb(244,165,130)',
-  'rgb(214,96,77)',
+  'rgb(103,0,31)',
   'rgb(178,24,43)',
-  'rgb(103,0,31)'
+  'rgb(214,96,77)',
+  'rgb(244,165,130)',
+  'rgb(253,219,199)',
+  mapWhite
 ];
 
 // migrate out
@@ -65,8 +69,10 @@ export default class DeckGLOverlay extends Component {
     this.state = {
       arcs: [],
       targetDict: {},
-      posScale: scaleLinear().range(['rgb(247,247,247)', 'rgb(5,48,97)']),
-      negScale: scaleLinear().range(['rgb(103,0,31)', 'rgb(247,247,247)'])
+      // posScale: scaleQuantile().range(colorbrewer_WhBu),
+      // negScale: scaleQuantile().range(colorbrewer_WhRd)
+      posScale: scaleThreshold().range(colorbrewer_WhBu),
+      negScale: scaleThreshold().range(colorbrewer_WhRd)
     };
   }
 
@@ -119,7 +125,7 @@ export default class DeckGLOverlay extends Component {
     }
   }
 
-  _getFillColour(targets, f, max) {
+  _getFillColour(targets, f) {
     var target = targets[f.id];
     if (!target) {
       return [0, 0, 0, 0];
@@ -128,7 +134,7 @@ export default class DeckGLOverlay extends Component {
     var colourString = scale(target.net);
     var colourArray = colourString.substring(colourString.indexOf('(') + 1, colourString.lastIndexOf(')')).split(/,\s*/);
     if (colourArray.length === 3) {
-      colourArray.push(255);
+      colourArray.push('255');
     }
     return colourArray;
   }
@@ -136,20 +142,28 @@ export default class DeckGLOverlay extends Component {
   render() {
     const {viewport, enableBrushing, strokeWidth, feature, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
-
+    
     const possibleValues = Object.keys(targets).map(k => targets[k].net);
-    const highestFiltered = Math.max(Math.max(...possibleValues), Math.abs(Math.min(...possibleValues)));
-    this.state.posScale.domain([0, highestFiltered]);
-    this.state.negScale.domain([-highestFiltered, 0]);
+    possibleValues.push(0);
+
+    if (!arcs || possibleValues.length < buckets) {
+      return null;
+    }
+    
+    // get ckmeans, then use maximums of each group (+1) as domains
+    const groupings = ckmeans(possibleValues.map(Math.abs), buckets - 1);
+    const thresholdDomain = groupings.map(g => g.slice(-1)[0] + 1);
+    this.state.posScale.domain(thresholdDomain);
+    this.state.negScale.domain(thresholdDomain.map(d => -d));
+
+    // const highestFiltered = Math.max(Math.max(...possibleValues), Math.abs(Math.min(...possibleValues)));
+    // this.state.posScale.domain(possibleValues.filter(v => v >= 0));
+    // this.state.negScale.domain(possibleValues.filter(v => v < 0));
 
     // mouseEntered is undefined when mouse is in the component while it first loads
     // enableBrushing if mouseEntered is not defined
     const isMouseover = mouseEntered !== false;
     const startBrushing = Boolean(isMouseover && enableBrushing);
-
-    if (!arcs) {
-      return null;
-    }
     
     const layers = [
       new GeoJsonLayer({
@@ -160,7 +174,7 @@ export default class DeckGLOverlay extends Component {
         extruded: false,
         pickable: true,
         onHover: this._onHover.bind(this),
-        getFillColor: f => this._getFillColour(targets, f, highestFiltered),
+        getFillColor: f => this._getFillColour(targets, f),
         getLineWidth: f => 15,
         updateTriggers: {
           getFillColor: [targets]

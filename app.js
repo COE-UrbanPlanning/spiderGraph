@@ -284,8 +284,6 @@ queue()
       const coordsLookup = createCoordsLookup(coords);
       const initLayerData = getLayerData(filter.result, coordsLookup);
       const gainValues = Object.keys(initLayerData.targetDict).map(k => initLayerData.targetDict[k].net);
-      // const min = Math.min(...gainValues);
-      // const max = Math.max(...gainValues);
     
       filters.forEach(f => {
         if (f.startValue) {
