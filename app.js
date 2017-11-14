@@ -37,6 +37,14 @@ function uniq(a) {
     });
 }
 
+function getValueSet(values) {
+  var numbers = [];
+  for (var i = values[0]; i < values[1]+1; i++) {
+    numbers.push(i);
+  }
+  return numbers;
+}
+
 function getLayerData(data, coordsLookup) {
   
   if (!data) {
@@ -288,6 +296,9 @@ queue()
       filters.forEach(f => {
         if (f.startValue) {
           filter.filter(f.filter, f.startValue);
+        }
+        if (f.startRange) {
+          filter.filter(f.filter, getValueSet(f.startRange));
         }
       });
     
