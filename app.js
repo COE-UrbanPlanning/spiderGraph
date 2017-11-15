@@ -118,7 +118,7 @@ function getLayerData(data, coordsLookup) {
   
   Object.keys(pairs).forEach(pairKey => {
     const {name, position, target, count} = pairs[pairKey];
-    const reverse = pairs[pairKey.split().reverse()];
+    const reverse = pairs[pairKey.split(',').reverse()];
     
     if (count > 0) { // only push positive arcs
       if (typeof reverse !== 'undefined') {
