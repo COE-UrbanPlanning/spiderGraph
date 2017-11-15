@@ -1,8 +1,9 @@
 import React, {Component} from 'react';
 
-import CheckPanel from './checkpanel.js'
-import ContinuousPanel from './continuouspanel.js'
-import RangePanel from './rangepanel.js'
+import CheckPanel from './checkpanel.js';
+import ContinuousPanel from './continuouspanel.js';
+import RangePanel from './rangepanel.js';
+import StoryToggle from './storytoggle.js';
 
 export default class Controls extends Component {
   constructor(props) {
@@ -52,7 +53,10 @@ export default class Controls extends Component {
     
     return (
       <div id="controls">
-        {filters.map(this._getFilterComponent)}
+        <div id="filters">
+          {filters.map(this._getFilterComponent)}
+        </div>
+        <StoryToggle />
       </div>
     );
   }

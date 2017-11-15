@@ -11,12 +11,21 @@ body {
   position: absolute;
   top: 50px;
   right: 50px;
+}
+
+#controls > div {
   padding: 20px 40px;
   background-color: white;
 }
 
 #controls h3 {
   font-size: 1em;
+}
+
+#toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 25px;
 }
 
 .slider {
@@ -45,3 +54,24 @@ body {
   color: white;
   background-color: #96dbfa;
 }
+
+.filter-button.left-button {
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+  margin-right: 0;
+}
+
+.filter-button.middle-button {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.filter-button.right-button {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+  margin-left: 0;
+}
+
