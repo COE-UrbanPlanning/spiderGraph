@@ -23,19 +23,19 @@ export default class Controls extends Component {
   
   _buildCheckPanel(filter) {
     return (
-      <CheckPanel data={filter} handler={this.props.handler}/>
+      <CheckPanel data={filter} handler={this.props.filterHandler} />
     );
   }
   
   _buildContinuousPanel(filter) {
     return (
-      <ContinuousPanel data={filter} handler={this.props.handler}/>
+      <ContinuousPanel data={filter} handler={this.props.filterHandler} />
     );
   }
   
   _buildRangePanel(filter) {
     return (
-      <RangePanel data={filter} handler={this.props.handler}/>
+      <RangePanel data={filter} handler={this.props.filterHandler} />
     );
   }
   
@@ -56,7 +56,7 @@ export default class Controls extends Component {
         <div id="filters">
           {filters.map(this._getFilterComponent)}
         </div>
-        <StoryToggle />
+        <StoryToggle handler={this.props.toggleHandler} />
       </div>
     );
   }

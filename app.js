@@ -246,6 +246,10 @@ class Root extends Component {
     );
   }
   
+  toggleDisplay() {
+    
+  }
+  
   filterMap(dim, filterText) {
     this.filter.filter(dim, filterText);
     this.draw();
@@ -288,7 +292,10 @@ class Root extends Component {
             onHover={this._onHover.bind(this)}
           />
         </MapGL>
-        <Controls filters={filterConfig} handler={this.filterMap}/>
+        <Controls
+          filters={filterConfig}
+          filterHandler={this.filterMap}
+          toggleHandler={this.toggleDisplay} />
       </div>
     );
   }
