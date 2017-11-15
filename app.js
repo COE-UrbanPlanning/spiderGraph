@@ -56,7 +56,7 @@ function getLayerData(data, coordsLookup) {
   const arcs = [];
   const not_found = [];
   
-  function processData(trip) {
+  data.forEach(trip => {
     const source = trip['I'];
     const target = trip['J'];
     const count = Number(trip['count']);
@@ -78,58 +78,74 @@ function getLayerData(data, coordsLookup) {
       return;
     }
     
-    const key = [source, target].sort((a, b) => Number(a) - Number(b));
-    let gain = 0;
-    let loss = 0;
-    // detect reverse trip
-    if (key[0] === source) {
-      gain = count;
-    } else {
-      loss = -count;
-    }
-    
-    let pair = pairs[[source, target]];
     if (!pairs[[source, target]]) {
       pairs[[source, target]] = {
         name: source,
         position: coordsLookup[source].properties.centroid,
         target: target,
-        gain: gain,
-        loss: loss
+        count: count
       };
     } else {
-      pairs[[source, target]].gain += gain;
-      pairs[[source, target]].loss += loss;
+      pairs[[source, target]].count += count;
+    }
+    
+    if (!targetDict[source]) {
+      targetDict[source] = {
+        name: source,
+        position: coordsLookup[source].properties.centroid,
+        gain: 0,
+        loss: -count,
+        net: -count
+      };
+    } else {
+      targetDict[source].loss -= count;
+      targetDict[source].net -= count;
     }
     
     if (!targetDict[target]) {
       targetDict[target] = {
         name: target,
         position: coordsLookup[target].properties.centroid,
-        gain: 0,
+        gain: count,
         loss: 0,
-        net: 0
+        net: count
       };
+    } else {
+      targetDict[target].gain += count;
+      targetDict[target].net += count;
     }
-  }
-  
-  data.forEach(processData);
+  });
   
   Object.keys(pairs).forEach(pairKey => {
-    const {name, position, target, gain, loss} = pairs[pairKey];
-    const net = gain + loss;
+    const {name, position, target, count} = pairs[pairKey];
+    const reverse = pairs[pairKey.split().reverse()];
     
-    targetDict[target].gain += gain;
-    targetDict[target].loss += loss;
-    targetDict[target].net += net;
+    if (count > 0) { // only push positive arcs
+      if (typeof reverse !== 'undefined') {
+        // still only push positive arcs
+        const net = count - reverse.count;
+        if (net >= 0) {
+          arcs.push({
+            sourceID: name,
+            targetID: target,
+            source: position,
+            target: coordsLookup[target].properties.centroid,
+            value: net
+          });
+        }
+      } else {
+        // if there were no trips in reverse direction, just
+        // push arc with net === count
+        arcs.push({
+          sourceID: name,
+          targetID: target,
+          source: position,
+          target: coordsLookup[target].properties.centroid,
+          value: count
+        });
+      }
+    }
     
-    arcs.push({
-      sourceID: name,
-      targetID: target,
-      source: position,
-      target: coordsLookup[target].properties.centroid,
-      value: net
-    });
   });
   
   if (not_found.length > 0) {
