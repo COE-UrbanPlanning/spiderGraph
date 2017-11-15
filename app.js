@@ -246,8 +246,8 @@ class Root extends Component {
     );
   }
   
-  toggleDisplay() {
-    
+  toggleDisplay(selection) {
+    console.log(selection);
   }
   
   filterMap(dim, filterText) {
