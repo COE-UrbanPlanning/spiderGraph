@@ -45,8 +45,7 @@ function getValueSet(values) {
   return numbers;
 }
 
-function getLayerData(data, coordsLookup) {
-  
+function getLayerData(data, coordsLookup, displayVariable) {
   if (!data) {
     return null;
   }
@@ -155,9 +154,9 @@ function getLayerData(data, coordsLookup) {
   return {arcs, targetDict};
 }
 
-function getLayerDataCalculator(lookup) {
+function getLayerDataCalculator(lookup, displayVariable) {
   return function(data) {
-    return getLayerData(data, lookup);
+    return getLayerData(data, lookup, displayVariable);
   }
 }
 
@@ -174,8 +173,7 @@ class Root extends Component {
   constructor(props) {
     super(props);
     
-    this.filter = props.filter; 
-    this.filterMap = this.filterMap.bind(this);
+    this.filter = props.filter;
     
     this.state = {
       viewport: {
@@ -186,7 +184,8 @@ class Root extends Component {
       data: null,
       coords: props.coords,
       filterConfig: props.filterConfig,
-      mousePosition: [0, 0]
+      mousePosition: [0, 0],
+      toggleSelected: 'net'
     };
   }
 
@@ -226,9 +225,20 @@ class Root extends Component {
   }
 
   _onHover({x, y, hoveredObject, target}) {
+    // target will be undefined if no trips went to the hovered zone
     this.setState({x, y, hoveredObject, tooltipTarget: target});
   }
 
+  _onClick({hoveredObject}) {
+    console.log(hoveredObject);
+    const {selectedObject: selected} = this.state;
+    if (!selected || hoveredObject.id !== selected.id) {
+      this.setState({selectedObject: hoveredObject});
+    } else {
+      this.setState({selectedObject: null});
+    }
+  }
+  
   _renderTooltip() {
     const {x, y, hoveredObject, tooltipTarget} = this.state;
 
@@ -247,7 +257,9 @@ class Root extends Component {
   }
   
   toggleDisplay(selection) {
-    console.log(selection);
+    this.setState({
+      toggleSelected: selection
+    });
   }
   
   filterMap(dim, filterText) {
@@ -267,8 +279,8 @@ class Root extends Component {
   }
   
   render() {
-    const {viewport, data, mouseEntered, hoveredObject: object} = this.state;
-    const {filterConfig, coords, calcMethod, dataBounds} = this.props;
+    const {viewport, data, mouseEntered, hoveredObject, selectedObject, toggleSelected} = this.state;
+    const {filterConfig, coords, calcMethod} = this.props;
     
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
@@ -282,20 +294,23 @@ class Root extends Component {
           <DeckGLOverlay viewport={viewport}
             data={data ? data : []}
             coords={coords}
-            feature={object}
+            hoveredFeature={hoveredObject}
+            selectedFeature={selectedObject}
             calcMethod={calcMethod}
-            dataBounds={dataBounds}
             opacity={0.3}
             strokeWidth={2}
             enableBrushing={true}
             mouseEntered={mouseEntered}
+            toggleSelected={toggleSelected}
             onHover={this._onHover.bind(this)}
+            onClick={this._onClick.bind(this)}
           />
         </MapGL>
         <Controls
           filters={filterConfig}
-          filterHandler={this.filterMap}
-          toggleHandler={this.toggleDisplay} />
+          filterHandler={this.filterMap.bind(this)}
+          toggleSelected={toggleSelected}
+          toggleHandler={this.toggleDisplay.bind(this)} />
       </div>
     );
   }
@@ -313,8 +328,6 @@ queue()
       console.log('data loaded');
       
       const coordsLookup = createCoordsLookup(coords);
-      const initLayerData = getLayerData(filter.result, coordsLookup);
-      const gainValues = Object.keys(initLayerData.targetDict).map(k => initLayerData.targetDict[k].net);
     
       filters.forEach(f => {
         if (f.startValue) {
@@ -328,7 +341,6 @@ queue()
       render(<Root filter={filter}
               filterConfig={filters}
               coords={coords}
-              dataBounds={gainValues}
               calcMethod={getLayerDataCalculator(coordsLookup)} />,
         document.getElementById("map"));
     } else {

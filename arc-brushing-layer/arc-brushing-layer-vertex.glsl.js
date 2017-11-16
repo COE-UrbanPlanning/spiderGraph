@@ -41,7 +41,7 @@ uniform float renderPickingBuffer;
 
 // uniform for brushing
 uniform float enableBrushing;
-uniform float featureID;
+uniform float hoveredFeatureID;
 
 varying vec4 vColor;
 
@@ -105,7 +105,7 @@ void main(void) {
   vec4 next = project_to_clipspace(vec4(nextPos, 1.0));
    
   // mix strokeWidth with brush, if not in brush, return 0
-  float finalWidth = mix(0.0, strokeWidth, isInFeature(instanceSource, instanceTarget, featureID, enableBrushing));
+  float finalWidth = mix(0.0, strokeWidth, isInFeature(instanceSource, instanceTarget, hoveredFeatureID, enableBrushing));
   
   // extrude
   vec2 offset = getExtrusionOffset((next.xy - curr.xy) * indexDir, positions.y, finalWidth);

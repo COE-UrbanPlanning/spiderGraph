@@ -51,6 +51,12 @@ const tooltipStyle = {
   pointerEvents: 'none'
 };
 
+const filterCriteria = {
+  'incoming': ['targetID'],
+  'net': ['sourceID', 'targetID'],
+  'outgoing': ['sourceID']
+};
+
 export default class DeckGLOverlay extends Component {
 
   static get defaultViewport() {
@@ -125,6 +131,10 @@ export default class DeckGLOverlay extends Component {
     }
   }
 
+  _onClick({object}) {
+    this.props.onClick({hoveredObject: object});
+  }
+  
   _getFillColour(targets, f) {
     var target = targets[f.id];
     if (!target) {
@@ -139,8 +149,17 @@ export default class DeckGLOverlay extends Component {
     return colourArray;
   }
   
+  _filterArcsBySelected(arcs, selectedFeature, toggleSelected) {
+    if (!selectedFeature) {
+      return arcs;
+    }
+    // get arcs that match selected feature ID, based on source or target or both
+    const criteria = a => filterCriteria[toggleSelected].map(c => a[c]);
+    return arcs.filter(a => criteria(a).includes(selectedFeature.id));
+  }
+  
   render() {
-    const {viewport, enableBrushing, strokeWidth, feature, opacity, mouseEntered, coords} = this.props;
+    const {viewport, enableBrushing, strokeWidth, hoveredFeature, selectedFeature, toggleSelected, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
     
     const possibleValues = Object.keys(targets).map(k => targets[k].net);
@@ -163,7 +182,7 @@ export default class DeckGLOverlay extends Component {
     // mouseEntered is undefined when mouse is in the component while it first loads
     // enableBrushing if mouseEntered is not defined
     const isMouseover = mouseEntered !== false;
-    const startBrushing = Boolean(isMouseover && enableBrushing);
+    const startBrushing = Boolean(isMouseover && enableBrushing && !selectedFeature);
     
     const layers = [
       new GeoJsonLayer({
@@ -174,6 +193,7 @@ export default class DeckGLOverlay extends Component {
         extruded: false,
         pickable: true,
         onHover: this._onHover.bind(this),
+        onClick: this._onClick.bind(this),
         getFillColor: f => this._getFillColour(targets, f),
         getLineWidth: f => 15,
         updateTriggers: {
@@ -182,10 +202,10 @@ export default class DeckGLOverlay extends Component {
       }),
       new ArcBrushingLayer({
         id: 'arc',
-        data: arcs,
+        data: this._filterArcsBySelected(arcs, selectedFeature, toggleSelected),
         strokeWidth: strokeWidth,
         opacity,
-        featureID: feature ? feature.id : null,
+        hoveredFeatureID: hoveredFeature ? hoveredFeature.id : null,
         enableBrushing: startBrushing,
         getSourcePosition: d => d.source,
         getTargetPosition: d => d.target,

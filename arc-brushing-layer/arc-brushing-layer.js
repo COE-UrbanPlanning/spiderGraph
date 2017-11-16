@@ -56,7 +56,7 @@ export default class ArcBrushingLayer extends ArcLayer {
     // add uniforms
     super.draw({uniforms: {
       ...uniforms,
-      featureID: this.props.featureID ? Number(this.props.featureID) : -1,
+      hoveredFeatureID: this.props.hoveredFeatureID ? Number(this.props.hoveredFeatureID) : -1,
       enableBrushing: this.props.enableBrushing ? 1 : 0
     }});
   }

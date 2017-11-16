@@ -6,29 +6,31 @@ export default class StoryToggle extends Component {
     
     this.handler = this.props.handler;
     this._notifySelection = this._notifySelection.bind(this);
-    
-    this.state = {
-      selected: 'net'
-    };
+    this._getButtonClass = this._getButtonClass.bind(this);
+  }
+  
+  _getButtonClass(position, selection) {
+    var classes = `filter-button ${position}-button`;
+    if (this.props.selected === selection) {
+      classes += ' selected';
+    }
+    return classes;
   }
   
   _notifySelection(selection) {
-    if (this.state.selected !== selection) {
-      this.state.selected = selection;
-      return () => {
-        this.handler(selection);
-      };
-    }
+    return () => {
+      this.handler(selection);
+    };
   }
   
   render() {
     return (
       <div id="toggle">
-        <div className="filter-button left-button"
+        <div className={this._getButtonClass('left', 'incoming')}
           onClick={this._notifySelection('incoming')}>Incoming</div>
-        <div className="filter-button middle-button"
+        <div className={this._getButtonClass('middle', 'net')}
           onClick={this._notifySelection('net')}>Net</div>
-        <div className="filter-button right-button"
+        <div className={this._getButtonClass('right', 'outgoing')}
           onClick={this._notifySelection('outgoing')}>Outgoing</div>
       </div>
     );

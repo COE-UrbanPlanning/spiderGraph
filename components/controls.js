@@ -50,13 +50,16 @@ export default class Controls extends Component {
   
   render() {
     const {filters} = this.state;
+    const {toggleHandler: handler, toggleSelected: selected} = this.props;
     
     return (
       <div id="controls">
         <div id="filters">
           {filters.map(this._getFilterComponent)}
         </div>
-        <StoryToggle handler={this.props.toggleHandler} />
+        <StoryToggle
+          handler={handler}
+          selected={selected} />
       </div>
     );
   }
