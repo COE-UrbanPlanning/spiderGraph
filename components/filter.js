@@ -30,12 +30,14 @@ export default class DataFilter {
   }
   
   buildFilters() {
-    var nonfilters = ['i', 'j', 'count'];
+    var nonfilters = ['I', 'J', 'count'];
     Object.keys(this.raw_data[0])
       .filter(col => !nonfilters.includes(col.toLowerCase()))
       .forEach(col => {
         this.filters[col] = this.data.dimension(d => d[col]);
       });
+      
+    this.placeFilter = this.data.dimension(d => [d['I'], d['J']]);
     return this;
   }
   
@@ -43,6 +45,7 @@ export default class DataFilter {
     Object.keys(this.filters).forEach(filter => {
       this.filters[filter].filterAll();
     });
+    return this;
   }
   
   _getFilterCriteria(filterValues) {
@@ -53,8 +56,19 @@ export default class DataFilter {
   }
   
   filter(dim, filterValues) {
-    this.filters[dim].filterAll();
     this.filters[dim].filter(this._getFilterCriteria(filterValues));
+    return this;
+  }
+  
+  filterPlace(dct, filterAnd) {
+    var matchSource = src => src === dct.source;
+    var matchTarget = tgt => tgt === dct.target;
+    
+    if (filterAnd) {
+      this.placeFilter.filter(d => matchSource(d[0]) && matchTarget(d[1]));
+    } else {
+      this.placeFilter.filter(d => matchSource(d[0]) || matchTarget(d[1]));
+    }
     return this;
   }
 }

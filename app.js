@@ -25,6 +25,21 @@ const tooltipStyle = {
   pointerEvents: 'none'
 };
 
+const filterCriteria = {
+  gain: {
+    arcs: ['target'],
+    targets: ['source']
+  },
+  net: {
+    arcs: ['source', 'target'],
+    targets: ['source', 'target']
+  },
+  loss: {
+    arcs: ['source'],
+    targets: ['target']
+  }
+};
+
 // Source data locations
 const DATA_URL = './data/trips_nbhd.csv';
 const COORDS_URL = './data/coords_nbhd.min.geojson';
@@ -230,12 +245,11 @@ class Root extends Component {
   }
 
   _onClick({hoveredObject}) {
-    console.log(hoveredObject);
     const {selectedObject: selected} = this.state;
     if (!selected || hoveredObject.id !== selected.id) {
-      this.setState({selectedObject: hoveredObject});
+      this.filterPlace(this.state.toggleSelected, hoveredObject);
     } else {
-      this.setState({selectedObject: null});
+      this.filterPlace(this.state.toggleSelected, null);
     }
   }
   
@@ -257,9 +271,18 @@ class Root extends Component {
   }
   
   toggleDisplay(selection) {
-    this.setState({
-      toggleSelected: selection
-    });
+    this.filterPlace(selection, this.state.selectedObject);
+  }
+  
+  filterPlace(toggleSelected, selectedObject) {
+    if (selectedObject) {
+      var filterArgs = {};
+      filterCriteria[toggleSelected]['arcs'].forEach(c => {
+        filterArgs[c] = selectedObject.id;
+      });
+      this.filter.filterPlace(filterArgs);
+    }
+    this.draw({toggleSelected, selectedObject});
   }
   
   filterMap(dim, filterText) {
@@ -272,10 +295,10 @@ class Root extends Component {
     this.draw();
   }
   
-  draw() {
-    this.setState({
+  draw(args) {
+    this.setState(Object.assign({}, args, {
       data: this.filter.result
-    });
+    }));
   }
   
   render() {

@@ -51,12 +51,6 @@ const tooltipStyle = {
   pointerEvents: 'none'
 };
 
-const filterCriteria = {
-  'incoming': ['targetID'],
-  'net': ['sourceID', 'targetID'],
-  'outgoing': ['sourceID']
-};
-
 export default class DeckGLOverlay extends Component {
 
   static get defaultViewport() {
@@ -149,15 +143,6 @@ export default class DeckGLOverlay extends Component {
     return colourArray;
   }
   
-  _filterArcsBySelected(arcs, selectedFeature, toggleSelected) {
-    if (!selectedFeature) {
-      return arcs;
-    }
-    // get arcs that match selected feature ID, based on source or target or both
-    const criteria = a => filterCriteria[toggleSelected].map(c => a[c]);
-    return arcs.filter(a => criteria(a).includes(selectedFeature.id));
-  }
-  
   render() {
     const {viewport, enableBrushing, strokeWidth, hoveredFeature, selectedFeature, toggleSelected, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
@@ -202,7 +187,7 @@ export default class DeckGLOverlay extends Component {
       }),
       new ArcBrushingLayer({
         id: 'arc',
-        data: this._filterArcsBySelected(arcs, selectedFeature, toggleSelected),
+        data: arcs,
         strokeWidth: strokeWidth,
         opacity,
         hoveredFeatureID: hoveredFeature ? hoveredFeature.id : null,
