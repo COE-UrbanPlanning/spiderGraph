@@ -52,9 +52,9 @@ const tooltipStyle = {
 };
 
 const filterCriteria = {
-  'incoming': ['targetID'],
-  'net': ['sourceID', 'targetID'],
-  'outgoing': ['sourceID']
+  gain: {arcs: ['targetID'], targets: ['sourceID']},
+  net: {arcs: ['sourceID', 'targetID'], targets: ['sourceID', 'targetID']},
+  loss: {arcs: ['sourceID'], targets: ['targetID']}
 };
 
 export default class DeckGLOverlay extends Component {
@@ -135,13 +135,13 @@ export default class DeckGLOverlay extends Component {
     this.props.onClick({hoveredObject: object});
   }
   
-  _getFillColour(targets, f) {
+  _getFillColour(targets, f, toggleSelected) {
     var target = targets[f.id];
     if (!target) {
       return [0, 0, 0, 0];
     }
-    const scale = target.net >= 0 ? this.state.posScale : this.state.negScale;
-    var colourString = scale(target.net);
+    const scale = target[toggleSelected] >= 0 ? this.state.posScale : this.state.negScale;
+    var colourString = scale(target[toggleSelected]);
     var colourArray = colourString.substring(colourString.indexOf('(') + 1, colourString.lastIndexOf(')')).split(/,\s*/);
     if (colourArray.length === 3) {
       colourArray.push('255');
@@ -154,20 +154,49 @@ export default class DeckGLOverlay extends Component {
       return arcs;
     }
     // get arcs that match selected feature ID, based on source or target or both
-    const criteria = a => filterCriteria[toggleSelected].map(c => a[c]);
+    const criteria = a => filterCriteria[toggleSelected]['arcs'].map(c => a[c]);
     return arcs.filter(a => criteria(a).includes(selectedFeature.id));
+  }
+  
+  _filterTargetsByArcs(targets, arcs, selectedFeature, toggleSelected) {
+    if (!selectedFeature) {
+      return targets;
+    }
+    if (selectedFeature) {
+      var filtered = {};
+      // get targets at the ends of arcs
+      const criteria = a => filterCriteria[toggleSelected]['targets'].map(c => a[c]);
+      arcs.forEach(a => {
+        if (criteria(a).includes(selectedFeature.id)) {
+          let zone = [a.sourceID, a.targetID].filter(z => z !== selectedFeature.id)[0];
+          // ignore trips from A -> A
+          if (typeof zone !== 'undefined') {
+            filtered[zone] = targets[zone];
+          }
+        }
+      });
+      return filtered;
+    }
   }
   
   render() {
     const {viewport, enableBrushing, strokeWidth, hoveredFeature, selectedFeature, toggleSelected, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
-    
-    const possibleValues = Object.keys(targets).map(k => targets[k].net);
-    possibleValues.push(0);
 
-    if (!arcs || possibleValues.length < buckets) {
+    if (!arcs) {
       return null;
     }
+    
+    const filteredArcs = this._filterArcsBySelected(arcs, selectedFeature, toggleSelected);
+    const filteredTargets = this._filterTargetsByArcs(targets, filteredArcs, selectedFeature, toggleSelected);
+    
+    if (Object.keys(filteredTargets).length < buckets) {
+      return null;
+    }
+    
+    // do something if not enough buckets
+    const possibleValues = Object.keys(filteredTargets).map(k => filteredTargets[k][toggleSelected]);
+    possibleValues.push(0);
     
     // get ckmeans, then use maximums of each group (+1) as domains
     const groupings = ckmeans(possibleValues.map(Math.abs), buckets - 1);
@@ -194,15 +223,15 @@ export default class DeckGLOverlay extends Component {
         pickable: true,
         onHover: this._onHover.bind(this),
         onClick: this._onClick.bind(this),
-        getFillColor: f => this._getFillColour(targets, f),
+        getFillColor: f => this._getFillColour(filteredTargets, f, toggleSelected),
         getLineWidth: f => 15,
         updateTriggers: {
-          getFillColor: [targets]
+          getFillColor: [filteredTargets, selectedFeature, toggleSelected]
         }
       }),
       new ArcBrushingLayer({
         id: 'arc',
-        data: this._filterArcsBySelected(arcs, selectedFeature, toggleSelected),
+        data: filteredArcs,
         strokeWidth: strokeWidth,
         opacity,
         hoveredFeatureID: hoveredFeature ? hoveredFeature.id : null,

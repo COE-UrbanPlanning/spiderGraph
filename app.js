@@ -230,7 +230,6 @@ class Root extends Component {
   }
 
   _onClick({hoveredObject}) {
-    console.log(hoveredObject);
     const {selectedObject: selected} = this.state;
     if (!selected || hoveredObject.id !== selected.id) {
       this.setState({selectedObject: hoveredObject});

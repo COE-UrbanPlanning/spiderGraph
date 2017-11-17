@@ -26,12 +26,12 @@ export default class StoryToggle extends Component {
   render() {
     return (
       <div id="toggle">
-        <div className={this._getButtonClass('left', 'incoming')}
-          onClick={this._notifySelection('incoming')}>Incoming</div>
+        <div className={this._getButtonClass('left', 'gain')}
+          onClick={this._notifySelection('gain')}>Incoming</div>
         <div className={this._getButtonClass('middle', 'net')}
           onClick={this._notifySelection('net')}>Net</div>
-        <div className={this._getButtonClass('right', 'outgoing')}
-          onClick={this._notifySelection('outgoing')}>Outgoing</div>
+        <div className={this._getButtonClass('right', 'loss')}
+          onClick={this._notifySelection('loss')}>Outgoing</div>
       </div>
     );
   }
