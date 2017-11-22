@@ -64,17 +64,17 @@ function getLayerData(data, coordsLookup, displayVariable) {
   if (!data) {
     return null;
   }
-  
+
   const pairs = {};
   const targetDict = {};
   const arcs = [];
   const not_found = [];
-  
+
   data.forEach(trip => {
     const source = trip['I'];
     const target = trip['J'];
     const count = Number(trip['count']);
-    
+
     var error = false;
     if (!coordsLookup.hasOwnProperty(source)) {
       error = true;
@@ -91,7 +91,11 @@ function getLayerData(data, coordsLookup, displayVariable) {
     if (error) {
       return;
     }
-    
+
+    if (source == target) {
+      return;
+    }
+
     if (!pairs[[source, target]]) {
       pairs[[source, target]] = {
         name: source,
@@ -102,7 +106,7 @@ function getLayerData(data, coordsLookup, displayVariable) {
     } else {
       pairs[[source, target]].count += count;
     }
-    
+
     if (!targetDict[source]) {
       targetDict[source] = {
         name: source,
@@ -115,7 +119,7 @@ function getLayerData(data, coordsLookup, displayVariable) {
       targetDict[source].loss -= count;
       targetDict[source].net -= count;
     }
-    
+
     if (!targetDict[target]) {
       targetDict[target] = {
         name: target,
@@ -129,11 +133,11 @@ function getLayerData(data, coordsLookup, displayVariable) {
       targetDict[target].net += count;
     }
   });
-  
+
   Object.keys(pairs).forEach(pairKey => {
     const {name, position, target, count} = pairs[pairKey];
     const reverse = pairs[pairKey.split(',').reverse()];
-    
+
     if (count > 0) { // only push positive arcs
       if (typeof reverse !== 'undefined') {
         // still only push positive arcs
@@ -159,13 +163,13 @@ function getLayerData(data, coordsLookup, displayVariable) {
         });
       }
     }
-    
+
   });
-  
+
   if (not_found.length > 0) {
     console.warn('The following zones were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
   }
-  
+
   return {arcs, targetDict};
 }
 
@@ -187,9 +191,9 @@ class Root extends Component {
 
   constructor(props) {
     super(props);
-    
+
     this.filter = props.filter;
-    
+
     this.state = {
       viewport: {
         ...DeckGLOverlay.defaultViewport,
@@ -252,14 +256,14 @@ class Root extends Component {
       this.filterPlace(this.state.toggleSelected, null);
     }
   }
-  
+
   _renderTooltip() {
     const {x, y, hoveredObject, tooltipTarget} = this.state;
 
     if (!hoveredObject) {
       return null;
     }
-    
+
     const net = tooltipTarget ? tooltipTarget.net : 0;
 
     return (
@@ -269,22 +273,26 @@ class Root extends Component {
       </div>
     );
   }
-  
+
   toggleDisplay(selection) {
     this.filterPlace(selection, this.state.selectedObject);
   }
-  
+
   filterPlace(toggleSelected, selectedObject) {
+    var filterArgs = {};
     if (selectedObject) {
-      var filterArgs = {};
       filterCriteria[toggleSelected]['arcs'].forEach(c => {
+        console.log(c);
         filterArgs[c] = selectedObject.id;
       });
       this.filter.filterPlace(filterArgs);
     }
+    else {
+      this.filter.filterPlace(null);
+    }
     this.draw({toggleSelected, selectedObject});
   }
-  
+
   filterMap(dim, filterText) {
     this.filter.filter(dim, filterText);
     this.draw();
@@ -294,17 +302,17 @@ class Root extends Component {
     this.filter.reset();
     this.draw();
   }
-  
+
   draw(args) {
     this.setState(Object.assign({}, args, {
       data: this.filter.result
     }));
   }
-  
+
   render() {
     const {viewport, data, mouseEntered, hoveredObject, selectedObject, toggleSelected} = this.state;
     const {filterConfig, coords, calcMethod} = this.props;
-    
+
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
            onMouseOver={this._onMouseOver.bind(this)}
@@ -349,9 +357,9 @@ queue()
   .await((error, data, coords, filters) => {
     if (!error) {
       console.log('data loaded');
-      
+
       const coordsLookup = createCoordsLookup(coords);
-    
+
       filters.forEach(f => {
         if (f.startValue) {
           filter.filter(f.filter, f.startValue);
@@ -360,7 +368,7 @@ queue()
           filter.filter(f.filter, getValueSet(f.startRange));
         }
       });
-    
+
       render(<Root filter={filter}
               filterConfig={filters}
               coords={coords}
