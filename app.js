@@ -282,7 +282,6 @@ class Root extends Component {
     var filterArgs = {};
     if (selectedObject) {
       filterCriteria[toggleSelected]['arcs'].forEach(c => {
-        console.log(c);
         filterArgs[c] = selectedObject.id;
       });
       this.filter.filterPlace(filterArgs);

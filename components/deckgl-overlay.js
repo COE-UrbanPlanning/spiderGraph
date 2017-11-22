@@ -101,7 +101,7 @@ export default class DeckGLOverlay extends Component {
 
     const target = targetDict[hoveredObject.id];
     const net = target ? target.net : 0;
-    
+
     return (
       <div style={{...tooltipStyle, left: x, top: y}}>
         <div>{hoveredObject.id}</div>
@@ -112,7 +112,7 @@ export default class DeckGLOverlay extends Component {
 
   _onHover({x, y, object}) {
     const {targetDict} = this.state;
-    
+
     if (this.props.onHover) {
       if (!object) {
         this.props.onHover({x, y});
@@ -120,7 +120,7 @@ export default class DeckGLOverlay extends Component {
       }
 
       const target = targetDict[object.id];
-    
+
       this.props.onHover({x, y, hoveredObject: object, target});
     }
   }
@@ -128,7 +128,7 @@ export default class DeckGLOverlay extends Component {
   _onClick({object}) {
     this.props.onClick({hoveredObject: object});
   }
-  
+
   _getFillColour(targets, f) {
     var target = targets[f.id];
     if (!target) {
@@ -142,23 +142,23 @@ export default class DeckGLOverlay extends Component {
     }
     return colourArray;
   }
-  
+
   render() {
     const {viewport, enableBrushing, strokeWidth, hoveredFeature, selectedFeature, toggleSelected, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
-    
+
     const possibleValues = Object.keys(targets).map(k => targets[k].net);
     possibleValues.push(0);
 
     if (!arcs || possibleValues.length < buckets) {
       return null;
     }
-    
+
     // get ckmeans, then use maximums of each group (+1) as domains
     const groupings = ckmeans(possibleValues.map(Math.abs), buckets - 1);
     const thresholdDomain = groupings.map(g => g.slice(-1)[0] + 1);
     this.state.posScale.domain(thresholdDomain);
-    this.state.negScale.domain(thresholdDomain.map(d => -d));
+    this.state.negScale.domain(thresholdDomain.map(d => -d).reverse());
 
     // const highestFiltered = Math.max(Math.max(...possibleValues), Math.abs(Math.min(...possibleValues)));
     // this.state.posScale.domain(possibleValues.filter(v => v >= 0));
@@ -168,7 +168,7 @@ export default class DeckGLOverlay extends Component {
     // enableBrushing if mouseEntered is not defined
     const isMouseover = mouseEntered !== false;
     const startBrushing = Boolean(isMouseover && enableBrushing && !selectedFeature);
-    
+
     const layers = [
       new GeoJsonLayer({
         id: 'geojson-layer',
@@ -198,7 +198,7 @@ export default class DeckGLOverlay extends Component {
         getTargetColor: d => targetColor
       })
     ];
-    
+
     return (
       <div>
         {this._renderTooltip()}
