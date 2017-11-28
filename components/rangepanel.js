@@ -10,7 +10,8 @@ export default class RangePanel extends Component {
     
     this.state = {
       filter: props.data.filter,
-      currentPosition: null
+      currentPosition: null,
+      overflow: props.data.overflowTop === true ? true : false
     };
   }
   
@@ -34,16 +35,8 @@ export default class RangePanel extends Component {
     }
   }
   
-  _getValueSet(values) {
-    var numbers = [];
-    for (var i = values[0]; i < values[1]+1; i++) {
-      numbers.push(i);
-    }
-    return numbers;
-  }
-  
   _notifyValues(values) {
-    this.handler(this.state.filter, this._getValueSet(values));
+    this.handler(this.state.filter, values);
     this.setState({currentPosition: values});
   }
   

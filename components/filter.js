@@ -48,15 +48,42 @@ export default class DataFilter {
     return this;
   }
 
-  _getFilterCriteria(filterValues) {
-    if (!(filterValues.constructor === Array)) {
-      filterValues = [filterValues];
+  _getValueSet(start, end) {
+    var numbers = [];
+    for (var i = start; i < end+1; i++) {
+      numbers.push(i);
     }
-    return d => filterValues.map(v => String(v)).includes(d);
+    return numbers;
+  }
+  
+  _filterValues(arr) {
+    return d => arr.map(v => String(v)).includes(d);
+  }
+  
+  _filterRange([start, end, overflow]) {
+    const inRange = this._filterValues(this._getValueSet(start, end));
+    
+    if (overflow === true) {
+      return d => inRange(d) || d > end;
+    }
+    return inRange;
+  }
+  
+  _getFilterCriteria(params) {
+    // covers multiple values
+    if (params[0].constructor === Array) {
+      return this._filterValues(params[0]);
+    }
+    // covers ranges
+    if (params.length === 2 || params.length === 3) {
+      return this._filterRange(params);
+    }
+    // covers exact value, null, functions
+    return params[0];
   }
 
-  filter(dim, filterValues) {
-    this.filters[dim].filter(this._getFilterCriteria(filterValues));
+  filter(dim, ...params) {
+    this.filters[dim].filter(this._getFilterCriteria(params));
     return this;
   }
 
