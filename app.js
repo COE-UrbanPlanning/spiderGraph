@@ -42,9 +42,8 @@ const filterCriteria = {
 };
 
 // Source data locations
-const ARCHIVE_URL = './data/data_nbhd.zip';
-const DATA_URL = 'trips_nbhd.csv';
-const COORDS_URL = 'coords_nbhd.min.geojson';
+const DATA_URL = './data/trips_nbhd.zip';
+const COORDS_URL = './data/coords_nbhd.min.zip';
 const FILTERS_URL = 'filters.json';
 
 function uniq(a) {
@@ -348,49 +347,30 @@ class Root extends Component {
   }
 }
 
-function loadDataFromZip(zip, callback) {
-  queue()
-    .defer(cb => zip.file(DATA_URL).async('string').then(data => { cb(null, csvParse(data)); }))
-    .defer(cb => zip.file(COORDS_URL).async('string').then(data => { cb(null, JSON.parse(data)); }))
-    .await((error, data, coords) => {
-      callback(error, [data, coords]);
-    });
-}
-
-function loadZip(zipFile, callback) {
-  JSZipUtils.getBinaryContent(zipFile, function(err, zip) {
-    if(err) {
-      throw err;
+function loadZip(zipFile, parser, callback) {
+  JSZipUtils.getBinaryContent(zipFile, function(error, zip) {
+    if(error) {
+      callback(error, zip);
+      return;
     }
     
     var jszip = new JSZip();
-    jszip.loadAsync(zip).then(() => { loadDataFromZip(jszip, callback); });
+    jszip.loadAsync(zip).then(() => {
+      const filename = Object.keys(jszip.files)[0];
+      jszip.file(filename).async('string').then(data => { callback(null, parser(data)); })
+    });
   });
 }
 
 var filter = new DataFilter();
 window.filter = filter;
-var data = null;
-var coords = null;
-var filters = null;
 
 queue()
-  .defer(loadZip, ARCHIVE_URL)
+  .defer(loadZip, DATA_URL, csvParse)
+  .defer(loadZip, COORDS_URL, JSON.parse)
   .defer(requestJSON, FILTERS_URL)
-  .await((error, [d, c], f) => {
+  .await((error, data, coords, filters) => {
     if (!error) {
-      console.log('data loaded');
-      
-      data = d;
-      coords = c;
-      filters = f;
-      
-      window.data = data;
-      window.coords = coords;
-      window.filters = filters;
-      
-      console.log(data, coords, filters);
-      
       filter.loadData(data);
       const coordsLookup = createCoordsLookup(coords);
 
