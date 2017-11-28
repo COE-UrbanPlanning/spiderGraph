@@ -1,9 +1,9 @@
 import crossfilter from 'crossfilter2';
-import {csv as requestCSV} from 'd3-request';
 
 export default class DataFilter {
   constructor() {
     this.filters = {};
+    this.loadData = this.loadData.bind(this);
   }
 
   get data() {
@@ -18,15 +18,10 @@ export default class DataFilter {
     return this._data.allFiltered();
   }
 
-  loadData(data_file, callback) {
-    requestCSV(data_file, (error, data) => {
-      if (!error) {
-        this._raw_data = data;
-        this._data = crossfilter(data);
-        this.buildFilters();
-      }
-      if (callback) { callback(error, this); }
-    });
+  loadData(csvData) {
+    this._raw_data = csvData;
+    this._data = crossfilter(csvData);
+    this.buildFilters();
   }
 
   buildFilters() {

@@ -4,12 +4,13 @@ import {render} from 'react-dom';
 import MapGL from 'react-map-gl';
 import {queue} from 'd3-queue';
 import {json as requestJSON} from 'd3-request';
+import {csvParse} from 'd3-dsv';
+import JSZip from 'jszip';
+import JSZipUtils from 'jszip-utils';
 
 import DeckGLOverlay from './components/deckgl-overlay.js';
 import DataFilter from './components/filter.js';
 import Controls from './components/controls.js';
-
-import {json as requestJson} from 'd3-request';
 
 // Set your mapbox token here
 //const MAPBOX_TOKEN = process.env.MapboxAccessToken; // eslint-disable-line
@@ -41,9 +42,10 @@ const filterCriteria = {
 };
 
 // Source data locations
-const DATA_URL = './data/trips_nbhd.csv';
-const COORDS_URL = './data/coords_nbhd.min.geojson';
-const FILTERS_URL = './filters.json';
+const ARCHIVE_URL = './data/data_nbhd.zip';
+const DATA_URL = 'trips_nbhd.csv';
+const COORDS_URL = 'coords_nbhd.min.geojson';
+const FILTERS_URL = 'filters.json';
 
 function uniq(a) {
     var seen = {};
@@ -346,17 +348,50 @@ class Root extends Component {
   }
 }
 
+function loadDataFromZip(zip, callback) {
+  queue()
+    .defer(cb => zip.file(DATA_URL).async('string').then(data => { cb(null, csvParse(data)); }))
+    .defer(cb => zip.file(COORDS_URL).async('string').then(data => { cb(null, JSON.parse(data)); }))
+    .await((error, data, coords) => {
+      callback(error, [data, coords]);
+    });
+}
+
+function loadZip(zipFile, callback) {
+  JSZipUtils.getBinaryContent(zipFile, function(err, zip) {
+    if(err) {
+      throw err;
+    }
+    
+    var jszip = new JSZip();
+    jszip.loadAsync(zip).then(() => { loadDataFromZip(jszip, callback); });
+  });
+}
+
 var filter = new DataFilter();
 window.filter = filter;
+var data = null;
+var coords = null;
+var filters = null;
 
 queue()
-  .defer(filter.loadData.bind(filter), DATA_URL)
-  .defer(requestJSON, COORDS_URL)
+  .defer(loadZip, ARCHIVE_URL)
   .defer(requestJSON, FILTERS_URL)
-  .await((error, data, coords, filters) => {
+  .await((error, [d, c], f) => {
     if (!error) {
       console.log('data loaded');
-
+      
+      data = d;
+      coords = c;
+      filters = f;
+      
+      window.data = data;
+      window.coords = coords;
+      window.filters = filters;
+      
+      console.log(data, coords, filters);
+      
+      filter.loadData(data);
       const coordsLookup = createCoordsLookup(coords);
 
       filters.forEach(f => {

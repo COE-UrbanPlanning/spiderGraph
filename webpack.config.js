@@ -25,10 +25,16 @@ const CONFIG = {
   resolve: {
     alias: {
       // From mapbox-gl-js README. Required for non-browserify bundlers (e.g. webpack):
-      'mapbox-gl$': resolve('./node_modules/mapbox-gl/dist/mapbox-gl.js')
+      'mapbox-gl$': resolve('./node_modules/mapbox-gl/dist/mapbox-gl.js'),
+      'jszip$': resolve('./node_modules/jszip/dist/jszip.js'),
+      'jszip-utils$': resolve('./node_modules/jszip-utils/dist/jszip-utils.js')
     }
   },
-    
+  
+  // externals: [
+    // {'./jszip': 'jszip'}
+  // ],
+  
   output: {
     //path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
