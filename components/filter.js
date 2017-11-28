@@ -32,7 +32,7 @@ export default class DataFilter {
         this.filters[col] = this.data.dimension(d => d[col]);
       });
 
-    this.placeFilter = this.data.dimension(d => [d['I'], d['J']]);
+    this.placeFilter = this.data.dimension(d => d['I'] + '|' + d['J']);
     return this;
   }
 
@@ -86,11 +86,13 @@ export default class DataFilter {
     if (dct) {
       var matchSource = src => src === dct.source;
       var matchTarget = tgt => tgt === dct.target;
+      // delimited string to array
+      var spl = d => d.split('|');
 
       if (filterAnd) {
-        this.placeFilter.filter(d => matchSource(d[0]) && matchTarget(d[1]));
+        this.placeFilter.filter(d => matchSource(spl(d)[0]) && matchTarget(spl(d)[1]));
       } else {
-        this.placeFilter.filter(d => matchSource(d[0]) || matchTarget(d[1]));
+        this.placeFilter.filter(d => matchSource(spl(d)[0]) || matchTarget(spl(d)[1]));
       }
     }
     else {
