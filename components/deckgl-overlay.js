@@ -66,6 +66,9 @@ export default class DeckGLOverlay extends Component {
 
   constructor(props) {
     super(props);
+    
+    this.coordsLookup = props.coords ? this._createCoordsLookup(coords) : {};
+    
     this.state = {
       arcs: [],
       targetDict: {},
@@ -79,19 +82,31 @@ export default class DeckGLOverlay extends Component {
   /* eslint-disable react/no-did-mount-set-state */
   componentDidMount() {
     this.setState({
-      ...this.props.calcMethod(this.props.data)
+      ...this._getLayerData(this.props.data)
     });
   }
   /* eslint-enable react/no-did-mount-set-state */
 
   componentWillReceiveProps(nextProps) {
+    if (nextProps.coords && nextProps.coords !== this.coords) {
+      this.coordsLookup = this._createCoordsLookup(nextProps.coords);
+    }
+    
     if (nextProps.data !== this.props.data) {
       this.setState({
-        ...this.props.calcMethod(nextProps.data)
+        ...this._getLayerData(nextProps.data)
       });
     }
   }
 
+  _createCoordsLookup(geojson) {
+    var lookup = {};
+    geojson.features.forEach(feature => {
+      lookup[feature.id] = feature;
+    });
+    return lookup;
+  }
+  
   _renderTooltip() {
     const {x, y, hoveredObject, targetDict} = this.state;
 
@@ -143,10 +158,128 @@ export default class DeckGLOverlay extends Component {
     return colourArray;
   }
 
+  _getLayerData(data) {
+    
+    if (!data) {
+      return null;
+    }
+
+    const pairs = {};
+    const targetDict = {};
+    const arcs = [];
+    const not_found = [];
+
+    data.forEach(trip => {
+      const source = trip['I'];
+      const target = trip['J'];
+      const count = Number(trip['count']);
+
+      var error = false;
+      if (!this.coordsLookup.hasOwnProperty(source)) {
+        error = true;
+        if (!not_found.includes(source)) {
+          not_found.push(source);
+        }
+      }
+      if (!this.coordsLookup.hasOwnProperty(target)) {
+        error = true;
+        if (!not_found.includes(target)) {
+          not_found.push(target);
+        }
+      }
+      if (error) {
+        return;
+      }
+
+      if (source == target) {
+        return;
+      }
+
+      if (!pairs[[source, target]]) {
+        pairs[[source, target]] = {
+          name: source,
+          position: this.coordsLookup[source].properties.centroid,
+          target: target,
+          count: count
+        };
+      } else {
+        pairs[[source, target]].count += count;
+      }
+
+      if (!targetDict[source]) {
+        targetDict[source] = {
+          name: source,
+          position: this.coordsLookup[source].properties.centroid,
+          gain: 0,
+          loss: -count,
+          net: -count
+        };
+      } else {
+        targetDict[source].loss -= count;
+        targetDict[source].net -= count;
+      }
+
+      if (!targetDict[target]) {
+        targetDict[target] = {
+          name: target,
+          position: this.coordsLookup[target].properties.centroid,
+          gain: count,
+          loss: 0,
+          net: count
+        };
+      } else {
+        targetDict[target].gain += count;
+        targetDict[target].net += count;
+      }
+    });
+
+    Object.keys(pairs).forEach(pairKey => {
+      const {name, position, target, count} = pairs[pairKey];
+      const reverse = pairs[pairKey.split(',').reverse()];
+
+      if (count > 0) { // only push positive arcs
+        if (typeof reverse !== 'undefined') {
+          // still only push positive arcs
+          const net = count - reverse.count;
+          if (net >= 0) {
+            arcs.push({
+              sourceID: name,
+              targetID: target,
+              source: position,
+              target: this.coordsLookup[target].properties.centroid,
+              value: net
+            });
+          }
+        } else {
+          // if there were no trips in reverse direction, just
+          // push arc with net === count
+          arcs.push({
+            sourceID: name,
+            targetID: target,
+            source: position,
+            target: this.coordsLookup[target].properties.centroid,
+            value: count
+          });
+        }
+      }
+
+    });
+
+    if (not_found.length > 0) {
+      console.warn('The following zones were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
+    }
+
+    return {arcs, targetDict};
+  }
+  
   render() {
     const {viewport, enableBrushing, strokeWidth, hoveredFeature, selectedFeature, toggleSelected, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
-
+    
+    if (!coords) {
+      return null;
+    }
+    
     const possibleValues = Object.keys(targets).map(k => targets[k].net);
     possibleValues.push(0);
 

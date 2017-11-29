@@ -12,7 +12,6 @@ export default class Controls extends Component {
     this._getFilterComponent = this._getFilterComponent.bind(this);
     
     this.state = {
-      filters: props.filters,
       panels: {
         check: this._buildCheckPanel,
         continuous: this._buildContinuousPanel,
@@ -49,8 +48,11 @@ export default class Controls extends Component {
   }
   
   render() {
-    const {filters} = this.state;
-    const {toggleHandler: handler, toggleSelected: selected} = this.props;
+    const {toggleHandler: handler, toggleSelected: selected, filters} = this.props;
+    
+    if (!filters) {
+      return null;
+    }
     
     return (
       <div id="controls">

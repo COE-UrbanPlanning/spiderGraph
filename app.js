@@ -61,140 +61,13 @@ function getValueSet(values) {
   return numbers;
 }
 
-function getLayerData(data, coordsLookup, displayVariable) {
-  if (!data) {
-    return null;
-  }
-
-  const pairs = {};
-  const targetDict = {};
-  const arcs = [];
-  const not_found = [];
-
-  data.forEach(trip => {
-    const source = trip['I'];
-    const target = trip['J'];
-    const count = Number(trip['count']);
-
-    var error = false;
-    if (!coordsLookup.hasOwnProperty(source)) {
-      error = true;
-      if (!not_found.includes(source)) {
-        not_found.push(source);
-      }
-    }
-    if (!coordsLookup.hasOwnProperty(target)) {
-      error = true;
-      if (!not_found.includes(target)) {
-        not_found.push(target);
-      }
-    }
-    if (error) {
-      return;
-    }
-
-    if (source == target) {
-      return;
-    }
-
-    if (!pairs[[source, target]]) {
-      pairs[[source, target]] = {
-        name: source,
-        position: coordsLookup[source].properties.centroid,
-        target: target,
-        count: count
-      };
-    } else {
-      pairs[[source, target]].count += count;
-    }
-
-    if (!targetDict[source]) {
-      targetDict[source] = {
-        name: source,
-        position: coordsLookup[source].properties.centroid,
-        gain: 0,
-        loss: -count,
-        net: -count
-      };
-    } else {
-      targetDict[source].loss -= count;
-      targetDict[source].net -= count;
-    }
-
-    if (!targetDict[target]) {
-      targetDict[target] = {
-        name: target,
-        position: coordsLookup[target].properties.centroid,
-        gain: count,
-        loss: 0,
-        net: count
-      };
-    } else {
-      targetDict[target].gain += count;
-      targetDict[target].net += count;
-    }
-  });
-
-  Object.keys(pairs).forEach(pairKey => {
-    const {name, position, target, count} = pairs[pairKey];
-    const reverse = pairs[pairKey.split(',').reverse()];
-
-    if (count > 0) { // only push positive arcs
-      if (typeof reverse !== 'undefined') {
-        // still only push positive arcs
-        const net = count - reverse.count;
-        if (net >= 0) {
-          arcs.push({
-            sourceID: name,
-            targetID: target,
-            source: position,
-            target: coordsLookup[target].properties.centroid,
-            value: net
-          });
-        }
-      } else {
-        // if there were no trips in reverse direction, just
-        // push arc with net === count
-        arcs.push({
-          sourceID: name,
-          targetID: target,
-          source: position,
-          target: coordsLookup[target].properties.centroid,
-          value: count
-        });
-      }
-    }
-
-  });
-
-  if (not_found.length > 0) {
-    console.warn('The following zones were omitted because their centroid coordinates were not found: ' + not_found.join(', '));
-  }
-
-  return {arcs, targetDict};
-}
-
-function getLayerDataCalculator(lookup, displayVariable) {
-  return function(data) {
-    return getLayerData(data, lookup, displayVariable);
-  }
-}
-
-function createCoordsLookup(geojson) {
-  var lookup = {};
-  geojson.features.forEach(feature => {
-    lookup[feature.id] = feature;
-  });
-  return lookup;
-}
-
 class Root extends Component {
 
   constructor(props) {
     super(props);
 
     this.filter = props.filter;
-
+    
     this.state = {
       viewport: {
         ...DeckGLOverlay.defaultViewport,
@@ -202,8 +75,6 @@ class Root extends Component {
         height: window.innerHeight - 100
       },
       data: null,
-      coords: props.coords,
-      filterConfig: props.filterConfig,
       mousePosition: [0, 0],
       toggleSelected: 'net'
     };
@@ -215,6 +86,13 @@ class Root extends Component {
     this._resize();
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.filter !== this.props.filter) {
+      this.filter = nextProps.filter;
+      this.draw();
+    }
+  }
+  
   _resize() {
     this._onViewportChange({
       width: window.innerWidth,
@@ -304,15 +182,17 @@ class Root extends Component {
   }
 
   draw(args) {
-    this.setState(Object.assign({}, args, {
-      data: this.filter.result
-    }));
+    if (this.filter) {
+      this.setState(Object.assign({}, args, {
+        data: this.filter.result
+      }));
+    }
   }
 
   render() {
     const {viewport, data, mouseEntered, hoveredObject, selectedObject, toggleSelected} = this.state;
-    const {filterConfig, coords, calcMethod} = this.props;
-
+    const {filterConfig, coords} = this.props;
+    
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
            onMouseOver={this._onMouseOver.bind(this)}
@@ -327,7 +207,6 @@ class Root extends Component {
             coords={coords}
             hoveredFeature={hoveredObject}
             selectedFeature={selectedObject}
-            calcMethod={calcMethod}
             opacity={0.3}
             strokeWidth={2}
             enableBrushing={true}
@@ -362,6 +241,11 @@ function loadZip(zipFile, parser, callback) {
   });
 }
 
+render(<Root filter={null}
+              filterConfig={null}
+              coords={null} />,
+        document.getElementById("map"));
+
 var filter = new DataFilter();
 window.filter = filter;
 
@@ -372,7 +256,6 @@ queue()
   .await((error, data, coords, filters) => {
     if (!error) {
       filter.loadData(data);
-      const coordsLookup = createCoordsLookup(coords);
 
       filters.forEach(f => {
         if (f.startValue) {
@@ -383,10 +266,9 @@ queue()
         }
       });
 
-      render(<Root filter={filter}
+      window.a = render(<Root filter={filter}
               filterConfig={filters}
-              coords={coords}
-              calcMethod={getLayerDataCalculator(coordsLookup)} />,
+              coords={coords} />,
         document.getElementById("map"));
     } else {
       console.error(error);
