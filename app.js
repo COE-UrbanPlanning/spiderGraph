@@ -42,8 +42,8 @@ const filterCriteria = {
 };
 
 // Source data locations
-const DATA_URL = './data/trips_nbhd.zip';
-const COORDS_URL = './data/coords_nbhd.min.zip';
+const DATA_URL = './data/trips_nbhd_district.zip';
+const COORDS_URL = './data/coords_nbhd_district.min.zip';
 const FILTERS_URL = 'filters.json';
 
 function uniq(a) {

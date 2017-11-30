@@ -6,6 +6,7 @@ export default class RangePanel extends Component {
     super(props);
     
     this.handler = props.handler;
+    this._onChange = this._onChange.bind(this);
     this._notifyValues = this._notifyValues.bind(this);
     
     this.state = {
@@ -35,9 +36,12 @@ export default class RangePanel extends Component {
     }
   }
   
+  _onChange(values) {
+    this.setState({currentPosition: values});
+  }
+  
   _notifyValues(values) {
     this.handler(this.state.filter, values);
-    this.setState({currentPosition: values});
   }
   
   render() {
@@ -55,7 +59,8 @@ export default class RangePanel extends Component {
           marks={valueMap}
           defaultValue={this.state.currentPosition ? this.state.currentPosition : [min, max]}
           step={null}
-          onChange={this._notifyValues} />
+          onChange={this._onChange}
+          onAfterChange={this._notifyValues} />
       </div>
     );
   }

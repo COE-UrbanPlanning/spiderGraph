@@ -6,6 +6,7 @@ export default class ContinuousPanel extends Component {
     super(props);
     
     this.handler = props.handler;
+    this._onChange = this._onChange.bind(this);
     this._notifyValues = this._notifyValues.bind(this);
     
     this.state = {
@@ -34,9 +35,12 @@ export default class ContinuousPanel extends Component {
     }
   }
   
+  _onChange(value) {
+    this.setState({currentPosition: value});
+  }
+  
   _notifyValues(value) {
     this.handler(this.state.filter, value);
-    this.setState({currentPosition: value});
   }
   
   render() {
@@ -55,7 +59,8 @@ export default class ContinuousPanel extends Component {
           defaultValue={this.state.currentPosition}
           step={null}
           included={false}
-          onChange={this._notifyValues} />
+          onChange={this._onChange}
+          onAfterChange={this._notifyValues} />
       </div>
     );
   }
