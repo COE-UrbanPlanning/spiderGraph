@@ -42,13 +42,14 @@ const targetColor = [35, 181, 184];
 
 const tooltipStyle = {
   position: 'absolute',
-  padding: '4px',
-  background: 'rgba(0, 0, 0, 0.8)',
-  color: '#fff',
-  maxWidth: '300px',
-  fontSize: '10px',
-  zIndex: 9,
-  pointerEvents: 'none'
+  pointerEvents: 'none',
+  zIndex: 999,
+  borderRadius: '3px',
+  padding: '10px',
+  backgroundColor: 'rgba(68,68,68,0.8)',
+  color: 'white',
+  fontSize: '20px',
+  fontWeight: '300'
 };
 
 export default class DeckGLOverlay extends Component {
@@ -66,9 +67,9 @@ export default class DeckGLOverlay extends Component {
 
   constructor(props) {
     super(props);
-    
+
     this.coordsLookup = props.coords ? this._createCoordsLookup(coords) : {};
-    
+
     this.state = {
       arcs: [],
       targetDict: {},
@@ -91,7 +92,7 @@ export default class DeckGLOverlay extends Component {
     if (nextProps.coords && nextProps.coords !== this.coords) {
       this.coordsLookup = this._createCoordsLookup(nextProps.coords);
     }
-    
+
     if (nextProps.data !== this.props.data) {
       this.setState({
         ...this._getLayerData(nextProps.data)
@@ -106,22 +107,42 @@ export default class DeckGLOverlay extends Component {
     });
     return lookup;
   }
-  
+
   _renderTooltip() {
     const {targetDict} = this.state;
-    const {mousePosition, hoveredFeature, mouseEntered} = this.props;
+    const {mousePosition, hoveredFeature, selectedFeature, mouseEntered, toggleSelected} = this.props;
 
     if (!mouseEntered || !hoveredFeature) {
       return null;
     }
 
     const target = targetDict[hoveredFeature.id];
-    const net = target ? target.net : 0;
+
+    let value = 0;
+    if (target) {
+      if (selectedFeature) {
+        // Hovering over selected feature gives number corresponding to toggleSelected.
+        // This is also the case when toggleSelected is 'net' since opposite of net is net
+        if (toggleSelected === 'net' || selectedFeature.id === hoveredFeature.id) {
+          value = target[toggleSelected];
+        // hovering over anything else gives opposite of toggleSelected
+        } else if (toggleSelected === 'loss') {
+          value = target.gain;
+        } else {
+          value = target.loss;
+        }
+      // if no zone is selected we always pick 'net'
+      } else {
+        value = target.net;
+      }
+    }
+
+    const scale = value >= 0 ? this.state.posScale : this.state.negScale;
 
     return (
       <div style={{...tooltipStyle, left: mousePosition[0], top: mousePosition[1]}}>
         <div>{hoveredFeature.id}</div>
-        <div>{`Net gain: ${net}`}</div>
+        <div><span style={{color: scale(value), fontWeight: '400'}}>{`${Math.abs(value)}`}</span> trips</div>
       </div>
     );
   }
@@ -160,7 +181,7 @@ export default class DeckGLOverlay extends Component {
   }
 
   _getLayerData(data) {
-    
+
     if (!data) {
       return null;
     }
@@ -272,15 +293,15 @@ export default class DeckGLOverlay extends Component {
 
     return {arcs, targetDict};
   }
-  
+
   render() {
-    const {viewport, enableBrushing, strokeWidth, hoveredFeature, selectedFeature, toggleSelected, opacity, mouseEntered, coords} = this.props;
+    const {viewport, enableBrushing, strokeWidth, hoveredFeature, selectedFeature, opacity, mouseEntered, coords} = this.props;
     const {arcs, targetDict: targets, onHover} = this.state;
-    
+
     if (!coords) {
       return null;
     }
-    
+
     const possibleValues = Object.keys(targets).map(k => targets[k].net);
     possibleValues.push(0);
 
