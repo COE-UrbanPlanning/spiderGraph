@@ -144,9 +144,9 @@ class Root extends Component {
   }
 
   _renderTooltip() {
-    const {x, y, hoveredObject, tooltipTarget} = this.state;
+    const {x, y, hoveredObject, tooltipTarget, mouseEntered} = this.state;
 
-    if (!hoveredObject) {
+    if (!mouseEntered || !hoveredObject) {
       return null;
     }
 
