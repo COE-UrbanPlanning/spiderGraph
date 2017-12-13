@@ -218,14 +218,13 @@ class Root extends Component {
   }
 
   render() {
-    const {viewport, data, mouseEntered, hoveredObject, selectedObject, toggleSelected} = this.state;
+    const {viewport, data, mouseEntered, mousePosition, hoveredObject, selectedObject, toggleSelected} = this.state;
     const {filterConfig, coords} = this.props;
-    
+
     return (
       <div onMouseMove={this._onMouseMove.bind(this)}
            onMouseOver={this._onMouseOver.bind(this)}
            onMouseOut={this._onMouseOut.bind(this)}>
-        {this._renderTooltip()}
         <MapGL
           {...viewport}
           onViewportChange={this._onViewportChange.bind(this)}
@@ -239,6 +238,7 @@ class Root extends Component {
             strokeWidth={2}
             enableBrushing={true}
             mouseEntered={mouseEntered}
+            mousePosition={mousePosition}
             toggleSelected={toggleSelected}
             onHover={this._onHover.bind(this)}
             onClick={this._onClick.bind(this)}

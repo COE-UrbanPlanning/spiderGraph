@@ -108,18 +108,19 @@ export default class DeckGLOverlay extends Component {
   }
   
   _renderTooltip() {
-    const {x, y, hoveredObject, targetDict} = this.state;
+    const {targetDict} = this.state;
+    const {mousePosition, hoveredFeature, mouseEntered} = this.props;
 
-    if (!hoveredObject) {
+    if (!mouseEntered || !hoveredFeature) {
       return null;
     }
 
-    const target = targetDict[hoveredObject.id];
+    const target = targetDict[hoveredFeature.id];
     const net = target ? target.net : 0;
 
     return (
-      <div style={{...tooltipStyle, left: x, top: y}}>
-        <div>{hoveredObject.id}</div>
+      <div style={{...tooltipStyle, left: mousePosition[0], top: mousePosition[1]}}>
+        <div>{hoveredFeature.id}</div>
         <div>{`Net gain: ${net}`}</div>
       </div>
     );
