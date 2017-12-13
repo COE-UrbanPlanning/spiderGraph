@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "http-server -p 3030"
+    "start": "http-server -p 3031"
   },
   "dependencies": {
     "crossfilter2": "^1.4.3",
@@ -18,8 +18,7 @@
     "react-dom": "^15.4.1",
     "react-map-gl": "^3.0.0",
     "set-default-browser": "^1.0.1",
-    "simple-statistics": "^5.1.0",
-    "yauzl": "^2.9.1"
+    "simple-statistics": "^5.1.0"
   },
   "devDependencies": {
     "buble-loader": "^0.4.0",

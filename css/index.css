@@ -75,3 +75,10 @@ body {
   margin-left: 0;
 }
 
+.disable {
+  pointer-events: none;
+}
+
+.progress {
+  cursor: progress !important;
+}

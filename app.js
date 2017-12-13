@@ -78,6 +78,8 @@ class Root extends Component {
       mousePosition: [0, 0],
       toggleSelected: 'net'
     };
+    
+    this._showLoading = this._showLoading.bind(this);
   }
 
   componentDidMount() {
@@ -129,11 +131,16 @@ class Root extends Component {
 
   _onClick({hoveredObject}) {
     const {selectedObject: selected} = this.state;
-    if (!selected || hoveredObject.id !== selected.id) {
-      this.filterPlace(this.state.toggleSelected, hoveredObject);
-    } else {
-      this.filterPlace(this.state.toggleSelected, null);
-    }
+    
+    this._showLoading();
+    
+    setTimeout(() => {
+      if (!selected || hoveredObject.id !== selected.id) {
+        this.filterPlace(this.state.toggleSelected, hoveredObject);
+      } else {
+        this.filterPlace(this.state.toggleSelected, null);
+      }
+    }, 50);
   }
 
   _renderTooltip() {
@@ -153,8 +160,24 @@ class Root extends Component {
     );
   }
 
+  _showLoading() {
+    document.getElementById('map')
+        .classList.add('disable');
+    document.body.classList.add('progress');
+  }
+  
+  _stopLoading() {
+    document.getElementById('map')
+        .classList.remove('disable');
+    document.body.classList.remove('progress');
+  }
+
   toggleDisplay(selection) {
-    this.filterPlace(selection, this.state.selectedObject);
+    this._showLoading();
+    
+    setTimeout(() => {
+      this.filterPlace(selection, this.state.selectedObject);
+    }, 50);
   }
 
   filterPlace(toggleSelected, selectedObject) {
@@ -172,8 +195,12 @@ class Root extends Component {
   }
 
   filterMap(dim, filterText) {
-    this.filter.filter(dim, filterText);
-    this.draw();
+    this._showLoading();
+    
+    setTimeout(() => {
+      this.filter.filter(dim, filterText);
+      this.draw();
+    }, 50);
   }
 
   resetFilters() {
@@ -186,6 +213,7 @@ class Root extends Component {
       this.setState(Object.assign({}, args, {
         data: this.filter.result
       }));
+      this._stopLoading();
     }
   }
 
