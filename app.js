@@ -143,23 +143,6 @@ class Root extends Component {
     }, 50);
   }
 
-  _renderTooltip() {
-    const {x, y, hoveredObject, tooltipTarget, mouseEntered} = this.state;
-
-    if (!mouseEntered || !hoveredObject) {
-      return null;
-    }
-
-    const net = tooltipTarget ? tooltipTarget.net : 0;
-
-    return (
-      <div style={{...tooltipStyle, left: x, top: y}}>
-        <div>{hoveredObject.id}</div>
-        <div>{`Net gain: ${net}`}</div>
-      </div>
-    );
-  }
-
   _showLoading() {
     document.getElementById('map')
         .classList.add('disable');
