@@ -3,6 +3,7 @@ import crossfilter from 'crossfilter2';
 export default class DataFilter {
   constructor() {
     this.filters = {};
+    this._currentFilterCriteria = {};
     this.loadData = this.loadData.bind(this);
   }
 
@@ -25,14 +26,16 @@ export default class DataFilter {
   }
 
   buildFilters() {
-    var nonfilters = ['I', 'J', 'count'];
+    var nonfilters = ['i', 'j', 'count'];
     Object.keys(this.raw_data[0])
       .filter(col => !nonfilters.includes(col.toLowerCase()))
       .forEach(col => {
+        this._currentFilterCriteria[col] = null;
         this.filters[col] = this.data.dimension(d => d[col]);
       });
 
     this.placeFilter = this.data.dimension(d => d['I'] + '|' + d['J']);
+    this._currentFilterCriteria['place'] = null;
     return this;
   }
 
@@ -77,8 +80,19 @@ export default class DataFilter {
     return params[0];
   }
 
+  _testFilter(dimension, dim, criteria) {
+    const oldCriteria = this._currentFilterCriteria[dim];
+    dimension.filter(criteria);
+    if (this.result.length > 0) {
+      this._currentFilterCriteria[dim] = criteria;
+    } else {
+      dimension.filter(oldCriteria);
+      throw 'result of filter was empty';
+    }
+  }
+  
   filter(dim, ...params) {
-    this.filters[dim].filter(this._getFilterCriteria(params));
+    this._testFilter(this.filters[dim], dim, this._getFilterCriteria(params));
     return this;
   }
 
@@ -89,14 +103,16 @@ export default class DataFilter {
       // delimited string to array
       var spl = d => d.split('|');
 
+      let criteria = null;
       if (filterAnd) {
-        this.placeFilter.filter(d => matchSource(spl(d)[0]) && matchTarget(spl(d)[1]));
+        criteria = d => matchSource(spl(d)[0]) && matchTarget(spl(d)[1]);
       } else {
-        this.placeFilter.filter(d => matchSource(spl(d)[0]) || matchTarget(spl(d)[1]));
+        criteria = d => matchSource(spl(d)[0]) || matchTarget(spl(d)[1]);
       }
+      this._testFilter(this.placeFilter, 'place', criteria);
     }
     else {
-      this.placeFilter.filter();
+      this._testFilter(this.placeFilter, 'place', null);
     }
     return this;
   }

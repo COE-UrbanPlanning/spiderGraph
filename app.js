@@ -186,7 +186,12 @@ class Root extends Component {
       filterCriteria[toggleSelected]['arcs'].forEach(c => {
         filterArgs[c] = selectedObject.id;
       });
-      this.filter.filterPlace(filterArgs);
+      try {
+        this.filter.filterPlace(filterArgs);
+      } catch (e) {
+        this.draw({toggleSelected});
+        return;
+      }
     }
     else {
       this.filter.filterPlace(null);
