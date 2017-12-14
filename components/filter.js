@@ -92,7 +92,7 @@ export default class DataFilter {
   }
   
   filter(dim, ...params) {
-    this._testFilter(this.filters[dim], dim, this._getFilterCriteria(params));
+    this.filters[dim].filter(this._getFilterCriteria(params));
     return this;
   }
 
