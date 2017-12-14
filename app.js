@@ -72,7 +72,7 @@ class Root extends Component {
       viewport: {
         ...DeckGLOverlay.defaultViewport,
         width: window.innerWidth,
-        height: window.innerHeight - 100
+        height: window.innerHeight
       },
       data: null,
       mousePosition: [0, 0],
@@ -98,7 +98,7 @@ class Root extends Component {
   _resize() {
     this._onViewportChange({
       width: window.innerWidth,
-      height: window.innerHeight - 100
+      height: window.innerHeight
     });
   }
 
