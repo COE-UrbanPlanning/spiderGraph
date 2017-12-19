@@ -4,14 +4,15 @@ import Slider from 'rc-slider';
 export default class ContinuousPanel extends Component {
   constructor(props) {
     super(props);
+    const {filter, startValue} = props.data;
     
     this.handler = props.handler;
     this._onChange = this._onChange.bind(this);
     this._notifyValues = this._notifyValues.bind(this);
     
     this.state = {
-      filter: props.data.filter,
-      currentPosition: null
+      filter: filter,
+      currentPosition: startValue || null
     };
   }
 
