@@ -4,6 +4,7 @@ import {Range} from 'rc-slider';
 export default class RangePanel extends Component {
   constructor(props) {
     super(props);
+    const {overflowTop, startRange} = props.data;
     
     this.handler = props.handler;
     this._onChange = this._onChange.bind(this);
@@ -11,7 +12,7 @@ export default class RangePanel extends Component {
     
     this.state = {
       filter: props.data,
-      currentPosition: null,
+      currentPosition: startRange || null,
       overflow: props.data.overflowTop === true ? true : false
     };
   }
