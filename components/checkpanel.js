@@ -4,6 +4,7 @@ import Set from 'es6-set';
 export default class CheckPanel extends Component {
   constructor(props) {
     super(props);
+    const {filter, startChecked, values} = props.data;
     
     this.handler = props.handler;
     this.handleClick = this.handleClick.bind(this);
@@ -11,15 +12,19 @@ export default class CheckPanel extends Component {
     this._notifyValues = this._notifyValues.bind(this);
     
     this.state = {
-      filter: props.data.filter,
-      currentSelected: this._createCurrentSelected(props.data.values)
+      filter: filter,
+      currentSelected: this._createCurrentSelected(values, startChecked)
     };
   }
   
-  _createCurrentSelected(values) {
+  _createCurrentSelected(values, checked) {
     var selected = {};
     values.forEach(v => {
-      selected[v[0]] = true;
+      if (checked) {
+        selected[v[0]] = checked.includes(v[0]);
+      } else {
+        selected[v[0]] = true;
+      }
     });
     return selected;
   }

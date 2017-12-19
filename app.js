@@ -7,6 +7,7 @@ import {json as requestJSON} from 'd3-request';
 import {csvParse} from 'd3-dsv';
 import JSZip from 'jszip';
 import JSZipUtils from 'jszip-utils';
+import Set from 'es6-set';
 
 import DeckGLOverlay from './components/deckgl-overlay.js';
 import DataFilter from './components/filter.js';
@@ -271,6 +272,10 @@ queue()
         }
         if (f.startRange) {
           filter.filter(f.filter, f.startRange.concat([f.overflowTop]));
+        }
+        if (f.startChecked) {
+          filter.filter(f.filter, new Set(f.startChecked));
+          console.log('checked');
         }
       });
 
