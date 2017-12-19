@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import Set from 'es6-set';
 
 export default class CheckPanel extends Component {
   constructor(props) {
@@ -38,7 +39,7 @@ export default class CheckPanel extends Component {
   }
   
   _notifyValues(valuesDct) {
-    const activeButtons = Object.keys(valuesDct).filter(v => valuesDct[v]);
+    const activeButtons = new Set(Object.keys(valuesDct).filter(v => valuesDct[v]));
     this.handler(this.state.filter, activeButtons);
     this.setState({currentSelected: valuesDct});
   }

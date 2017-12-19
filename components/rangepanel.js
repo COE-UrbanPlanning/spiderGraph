@@ -10,7 +10,7 @@ export default class RangePanel extends Component {
     this._notifyValues = this._notifyValues.bind(this);
     
     this.state = {
-      filter: props.data.filter,
+      filter: props.data,
       currentPosition: null,
       overflow: props.data.overflowTop === true ? true : false
     };
@@ -41,7 +41,13 @@ export default class RangePanel extends Component {
   }
   
   _notifyValues(values) {
-    this.handler(this.state.filter, values);
+    const {filter, overflow} = this.state;
+    // this type coercion is intentional
+    if (overflow && values[1] == filter.values.slice(-1)[0][0]) {
+      this.handler(filter.filter, values.concat([overflow]));
+    } else {
+      this.handler(filter.filter, values);
+    }
   }
   
   render() {

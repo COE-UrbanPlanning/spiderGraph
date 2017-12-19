@@ -48,7 +48,7 @@ const tooltipStyle = {
   padding: '10px',
   backgroundColor: 'rgba(68,68,68,0.8)',
   color: 'white',
-  fontSize: '20px',
+  fontSize: '16px',
   fontWeight: '300'
 };
 
@@ -142,7 +142,7 @@ export default class DeckGLOverlay extends Component {
     return (
       <div style={{...tooltipStyle, left: mousePosition[0], top: mousePosition[1]}}>
         <div>{hoveredFeature.id}</div>
-        <div><span style={{color: scale(value), fontWeight: '400'}}>{`${Math.abs(value)}`}</span> trips</div>
+        <div><span style={{color: scale(value), fontWeight: '400', fontSize: '24px'}}>{`${Math.abs(value)}`}</span> trips</div>
       </div>
     );
   }

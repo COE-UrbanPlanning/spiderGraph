@@ -1,4 +1,5 @@
 import crossfilter from 'crossfilter2';
+import Set from 'es6-set';
 
 export default class DataFilter {
   constructor() {
@@ -51,11 +52,11 @@ export default class DataFilter {
     for (var i = start; i < end+1; i++) {
       numbers.push(i);
     }
-    return numbers;
+    return new Set(numbers.map(v => String(v)));
   }
   
-  _filterValues(arr) {
-    return d => arr.map(v => String(v)).includes(d);
+  _filterValues(valueSet) {
+    return d => valueSet.has(d);
   }
   
   _filterRange([start, end, overflow]) {
@@ -69,15 +70,15 @@ export default class DataFilter {
   
   _getFilterCriteria(params) {
     // covers multiple values
-    if (params[0].constructor === Array) {
-      return this._filterValues(params[0]);
+    if (params.constructor === Set) {
+      return this._filterValues(params);
     }
     // covers ranges
-    if (params.length === 2 || params.length === 3) {
+    if (params.constructor === Array && (params.length === 2 || params.length === 3)) {
       return this._filterRange(params);
     }
     // covers exact value, null, functions
-    return params[0];
+    return params;
   }
 
   _testFilter(dimension, dim, criteria) {
@@ -91,7 +92,7 @@ export default class DataFilter {
     }
   }
   
-  filter(dim, ...params) {
+  filter(dim, params) {
     this.filters[dim].filter(this._getFilterCriteria(params));
     return this;
   }

@@ -53,14 +53,6 @@ function uniq(a) {
     });
 }
 
-function getValueSet(values) {
-  var numbers = [];
-  for (var i = values[0]; i < values[1]+1; i++) {
-    numbers.push(i);
-  }
-  return numbers;
-}
-
 class Root extends Component {
 
   constructor(props) {
@@ -278,7 +270,7 @@ queue()
           filter.filter(f.filter, f.startValue);
         }
         if (f.startRange) {
-          filter.filter(f.filter, getValueSet(f.startRange));
+          filter.filter(f.filter, f.startRange.concat([f.overflowTop]));
         }
       });
 
