@@ -335,6 +335,7 @@ export default class DeckGLOverlay extends Component {
         onHover: this._onHover.bind(this),
         onClick: this._onClick.bind(this),
         getFillColor: f => this._getFillColour(targets, f),
+        getLineColor: f => [170,170,170],
         getLineWidth: f => 15,
         updateTriggers: {
           getFillColor: [targets]
