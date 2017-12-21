@@ -44,7 +44,7 @@ npm start
 webpack
 ```
 
-- When you run `npm start`, it will tell you the URL and port at which you can access the visualization. If you go to that URL, you will see the map. You can also see it by going to localhost:<port number>.
+- When you run `npm start`, it will tell you the URL and port at which you can access the visualization. If you go to that URL, you will see the map. You can also see it by going to `localhost:<port number>`.
 
 ### Data format
 There is not currently any sample data for this project. The format of the data we used is covered below.
