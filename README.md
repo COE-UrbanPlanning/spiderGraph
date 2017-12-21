@@ -47,8 +47,7 @@ webpack
 ### Data format
 There is not currently any sample data for this project. The format of the data we used is covered below.
 
-One file, the trips file, contains information about all of the trips carried out between locations. This file should be a csv file that starts 
-with the line 
+One file, the trips file, contains information about all of the trips carried out between locations. This file should be a csv file that starts with a line similar to
 ```
 I,J,Time,Mode,IncGrp,HHSize,count
 ```
@@ -67,19 +66,21 @@ For example, the line
 ```
 means that 8 trips took place between location 1000 and location 1001 in the AM in a vehicle that has one occupant where the traveller has an income between $25K-$80K per year and a household size of 6 people.
 
+This is just an example of the data that can be shown and filtered by the trips file. The only essential values are I, J, and count. As long as you have those, you can have other values for the other columns. You can have more or fewer columns. Just keep in mind that having more columns will make the project take longer to load due to the increased amount of data.
+
 Another data file you need, the coords file, is a geojson file that contains the shapes of the locations people are travelling between. Each feature within the features needs to have an "id" that corresponds to the id of the location, a "centroid" within the "properties" parameter that contains a list of the latitude and longitude of the centroid of the shape, and a list of lists of coordinates representing the points that make up the shape of each location.
 
 The other data file you need is the filters.json file that there is an example of in this folder. It is covered in more detail in the next section.
 
 ### Filters format
 The filters.json file contains information that the script uses to display filters. It contains objects that each have the following parameters:
-- "filter", which is a unique id for each object. It references the column in the trips file that you would like to filter.
-- "label", which is the label that will be displayed for this particular filter. 
-- "type", which is the type of filter that will be displayed. The current supported values are "continuous", "check", and "range". "continuous" shows a continous range that can have one selected value at a time. "check" shows a group of boxes that can be checked or unchecked (by default, all are checked, unless startChecked is defined). "range" is similar to "continuous", but it is possible to have a range of values selected.
-- "values", which is a list of values that will be displayed. This will be a list of lists. Each list in the list of lists has 2 values: the unique for that value, and the label that will be shown for that value. For "continuous" and "range", these values will be shown as points along their ranges. For "check", the values will each be shown as their own button that can be selected or deselected. 
-- "startValue", which is required for type "continuous". This is the value that is selected initially. This value doesn't mean anything in the context of a "check" or "range" type object. 
-- "startChecked", which is optional for objects of type "check". If it is not present, all values will be checked by default. If it is present, only the values within its list will be checked at the beginning. Its value should be a list of the unique ids of the values. This value has no meaning in the context of a "continuous" or "range" type object.
-- "startRange", which is required for objects of type "range". It says what the starting left and right values of the selected range will be. It is a list of 2 unique ids from the values. This value has no meaning in the context of a "continous" or "check" type object.
-- "overflowTop", which is an optional boolean argument for objects of type "range". If true, the uppermost value in the range will also cover any values greater than the greatest value in the range. For example, in the filters.json file, the 6+ option in the range covers household sizes of 6 or more people. If overflowTop had not been true, only households of size 6 would be covered by the 6+ value in the range.
+- `filter`, which is a unique id for each object. It references the column in the trips file that you would like to filter.
+- `label`, which is the label that will be displayed for this particular filter. 
+- `type`, which is the type of filter that will be displayed. The current supported values are `continuous`, `check`, and `range`. `continuous` shows a continous range that can have one selected value at a time. `check` shows a group of boxes that can be checked or unchecked (by default, all are checked, unless startChecked is defined). `range` is similar to `continuous`, but it is possible to have a range of values selected.
+- `values`, which is a list of values that will be displayed. This will be a list of lists. Each list in the list of lists has 2 values: the unique id for that value, and the label that will be shown for that value. For `continuous` and `range`, these values will be shown as points along their ranges. For `check`, the values will each be shown as their own button that can be selected or deselected. 
+- `startValue`, which is optional for type `continuous`. This is the value that is selected initially. If it is not set for a `continuous` object, the farthest left value is chosen by default. This value doesn't mean anything in the context of a `check` or `range` type object. 
+- `startChecked`, which is optional for objects of type `check`. If it is not present, all values will be checked by default. If it is present, only the values within its list will be checked at the beginning. Its value should be a list of the unique ids of the values. This value has no meaning in the context of a `continuous` or `range` type object.
+- `startRange`, which is optional for objects of type `range`. It says what the starting left and right values of the selected range will be. It is a list of 2 unique ids from the values. If it is not present, the range from the farthest left value to the farthest right value is selected by default. This value has no meaning in the context of a `continuous` or `check` type object.
+- `overflowTop`, which is an optional boolean argument for objects of type `range`. If true, the uppermost value in the range will also cover any values greater than the greatest value in the range. For example, in the filters.json file, the 6+ option in the range covers household sizes of 6 or more people. If overflowTop had not been true, only households of size 6 would be covered by the 6+ value in the range.
 
 
